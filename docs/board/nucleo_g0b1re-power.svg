@@ -88,5 +88,5 @@
 <text x="346.00" y="549.00" font-family="'IBM Plex Sans', Inter, 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif" font-size="10" text-anchor="start" style="fill:#1f2a24">rail</text>
 <rect x="390.40" y="540.00" width="14.00" height="10.00" rx="2.00" style="fill:#eceff1;stroke:#546e7a"/>
 <text x="408.40" y="549.00" font-family="'IBM Plex Sans', Inter, 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif" font-size="10" text-anchor="start" style="fill:#1f2a24">load</text>
-<text x="1540.00" y="549.00" font-family="'IBM Plex Sans', Inter, 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif" font-size="9.5" text-anchor="end" style="fill:#6b7570">UM2324 Rev 5 · MB1360-G0B1RE-C02 schematic · drawn by boardmap (bedrock_board)</text>
+<text x="1540.00" y="549.00" font-family="'IBM Plex Sans', Inter, 'Noto Sans', 'DejaVu Sans', system-ui, sans-serif" font-size="9.5" text-anchor="end" style="fill:#6b7570">UM2324 Rev 5 · MB1360-G0B1RE-C02 schematic · STM32G0B1xx datasheet DS13560 Rev 6 · drawn by boardmap (bedrock_board)</text>
 </svg>

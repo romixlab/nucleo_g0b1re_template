@@ -47,3 +47,4 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | TPL-3 | Template upgrades from embedded_bedrock (`bedrock_fw.json`, procedure in AGENTS.md) | ✅ | |
 | TPL-4 | Build info record in flash (`--build-info`) | 📋 | needs embedded_bedrock's crates buildable from git |
 | TPL-5 | Board map in `docs/board/`: top and bottom views, power tree, pin and solder bridge tables, `just board` | ✅ | boardmap (bedrock_board), facts from UM2324 and ST's MB1360 board file |
+| TPL-7 | README and board map document B1 (pressed level, SB20), LD4/LD1/LD3, and how CN4 picks the ST-LINK's SWD target (on-board vs. CN11) | ✅ | facts from UM2324 Rev 5, the MB1360-G0B1RE-C02 netlist and the STM32G0B1xx datasheet |

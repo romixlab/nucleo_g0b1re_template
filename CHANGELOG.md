@@ -13,3 +13,8 @@ All notable changes to this project are documented here. The format follows
   with live shell completion, the `nucleo_g0b1re` Python module, `just` recipes, CI and `just rename`.
 - Board map (`docs/board/`): top and bottom views with every header pin coloured by what it is for, solder bridges
   with their defaults, the power tree and a pin table, drawn by boardmap from `nucleo_g0b1re.toml`; `just board`.
+- README and `docs/board/nucleo_g0b1re.toml` document the USER button B1 (PC13, pulled up and read `1` released,
+  `0` pressed, SB20), the LEDs (LD4 user on PA5 through a MOSFET, also `TIM2_CH1_ETR` for a PWM breathe; LD1 COM
+  and LD3 PWR, driven by the ST-LINK, not the target MCU), and how the CN4 jumpers pick the ST-LINK's SWD target
+  (on-board STM32G0B1RE, or external through CN11); facts from UM2324 Rev 5, the MB1360-G0B1RE-C02 schematic and
+  the STM32G0B1xx datasheet.
