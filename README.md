@@ -57,17 +57,24 @@ state; **LD3 (PWR)** is on whenever the board's 5 V rail is present (UM2324 §6.
 both OFF route it out to CN11 instead, to program or debug an external target board (UM2324 §6.4.3, §6.4.4,
 Table 6). Don't wire CN11 while CN4 is ON, it can disturb the on-board link.
 
-## Toolchain
+## Setup
+
+With [just](https://just.systems/man/en/packages.html) and [uv](https://docs.astral.sh/uv/getting-started/installation/)
+installed (Windows: `winget install Casey.Just` and
+`winget install astral-sh.uv`):
 
 ```sh
-rustup target add thumbv6m-none-eabi
-cargo install probe-rs-tools --locked
-cargo install flip-link cnt_cli
-cargo install just
-# Python module and the rename script: uv (https://docs.astral.sh/uv/)
+just setup               # rustup, the thumbv6m-none-eabi target, probe-rs, flip-link, cnt, ww, boardmap
+just setup --check       # only report what is missing
 ```
 
-On Linux the ST-LINK needs a udev rule, see [probe-rs](https://probe.rs/docs/getting-started/probe-setup/).
+`scripts/setup.py` runs on Arch, Ubuntu / Debian and Windows and skips what is already there. Steps that need root or
+an administrator are printed for you to run, never run behind your back: the system packages (a C compiler, git,
+curl; on Windows the MSVC build tools), the udev rule that lets you open the ST-LINK on Linux
+([probe-rs](https://probe.rs/docs/getting-started/probe-setup/)) and ST's ST-LINK driver on Windows.
+`just setup --root` runs them too, each shown first; `--no-probe` leaves out the probe's udev rule or driver (a build
+server). It also sets git's `core.hooksPath` to `.githooks`, the
+project's git hooks.
 
 ## Run
 

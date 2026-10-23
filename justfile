@@ -1,11 +1,19 @@
 # Nucleo G0B1RE template: the firmware (firmware/, its .cargo/config.toml sets the target), the host workspace at
 # the root (API crate, client library, `g0b1re` command line, Python module).
 
+# Windows runs the recipes with cmd (`cd x && y` works there too): not every PC has Git's sh on PATH
+set windows-shell := ["cmd.exe", "/c"]
+
 chip := "STM32G0B1RETx"
 fw_dir := "firmware/target/thumbv6m-none-eabi"
 
 default:
     @just --list
+
+# rustup and the firmware's target, probe-rs, flip-link, cnt, ww, boardmap, git's core.hooksPath (.githooks)
+# Set up this PC; prints the steps that need root (`--root` runs them too, `--check` only reports what is missing)
+setup *args:
+    uv run scripts/setup.py {{args}}
 
 # Host tests (the workspace; the Python module's tests: `just test-py`)
 test *flags:
@@ -46,9 +54,15 @@ attach:
     probe-rs attach --chip {{chip}} {{fw_dir}}/debug/nucleo_g0b1re
 
 # Build the `g0b1re` command line and install it on this PC (with tpm on PATH through tpm install, else cargo install)
+[unix]
 install:
     cargo build --profile deploy --locked -p nucleo_g0b1re_cli
     if command -v tpm >/dev/null; then tpm install target/deploy/g0b1re; else cargo install --locked --path nucleo_g0b1re_cli; fi
+
+# Build the `g0b1re` command line and install it on this PC (cargo install)
+[windows]
+install:
+    cargo install --locked --path nucleo_g0b1re_cli
 
 # Bring this PC and the board on the probe up to main: pull --ff-only (refuses on local changes), install, flash, check `g0b1re --version`
 deploy:
