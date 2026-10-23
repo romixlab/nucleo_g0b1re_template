@@ -21,6 +21,10 @@ workspace: it builds for `thumbv6m-none-eabi` with its own `.cargo/config.toml` 
 - `docs/board/` — the board map: `nucleo_g0b1re.toml` (what to draw, what every pin does) and the geometry JSON
   extracted from ST's board file; the SVGs and `nucleo_g0b1re-pins.md` are rendered from them by `just board`
   (boardmap from embedded_bedrock) and committed, so GitHub shows them. Edit the TOML, never the pictures.
+- `docs/logo/` — the logo: `template_logo.typ` (the same for every template repo), `logo.typ` (this board's name, chip
+  label and subtitle), `pair.svg` (WireWeaver's twisted pair, fixed artwork), JetBrains Mono Bold (printable ASCII
+  subset) in `fonts/`; `just logo` renders `logo.svg`, `logo-dark.svg` and `social-preview.png`, committed. Edit the
+  `.typ`, never the pictures.
 
 WireWeaver and embedded_bedrock crates come from git, pinned by the lock files; a change there is made upstream,
 not worked around here.

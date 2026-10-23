@@ -1,5 +1,12 @@
 # Nucleo-G0B1RE firmware template
 
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-dark.svg">
+  <img src="docs/logo/logo.svg" alt="Nucleo-G0B1RE WireWeaver firmware template logo" width="480"/>
+</picture>
+</p>
+
 A complete, working starting point for a [WireWeaver](https://github.com/vhrdtech/wire_weaver) device on the
 [ST Nucleo-G0B1RE](https://www.st.com/en/evaluation-tools/nucleo-g0b1re.html) board (STM32G0B1RE, Cortex-M0+):
 firmware, a typed API, a Rust client library, a command line and a Python module, all from one API definition.

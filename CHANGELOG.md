@@ -5,6 +5,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Logo at the top of the README (light and dark), drawn by a Typst template in `docs/logo/` with the board name, the
+  chip label and the subtitle as parameters, plus a 1280 x 640 social preview; `just logo`.
+
 ## [0.1.0] - 2026-10-23
 
 ### Added

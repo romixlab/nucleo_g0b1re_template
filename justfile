@@ -78,3 +78,10 @@ rename name short="":
 # with boardmap: `cargo install --git https://github.com/romixlab/embedded_bedrock bedrock_board_cli`
 board:
     boardmap render docs/board/nucleo_g0b1re.toml
+
+# Re-draw the logo in docs/logo/ from logo.typ: logo.svg and logo-dark.svg for the README, and social-preview.png
+# (1280 x 640) for GitHub's social preview; needs typst
+logo:
+    typst compile --ignore-system-fonts --font-path docs/logo/fonts docs/logo/logo.typ docs/logo/logo.svg
+    typst compile --ignore-system-fonts --font-path docs/logo/fonts --input theme=dark docs/logo/logo.typ docs/logo/logo-dark.svg
+    typst compile --ignore-system-fonts --font-path docs/logo/fonts --ppi 72 docs/logo/social.typ docs/logo/social-preview.png
