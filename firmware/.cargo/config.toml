@@ -1,0 +1,16 @@
+[target.thumbv6m-none-eabi]
+runner = "probe-rs run --chip STM32G0B1RE"
+# Stack overflow protection: the stack goes below .data/.bss and overflows fault (cargo install flip-link)
+linker = "flip-link"
+
+[build]
+target = "thumbv6m-none-eabi"
+
+[env]
+DEFMT_LOG = "debug,nucleo_g0b1re=debug"
+CNT_RAM_BUFFER_SIZE_WORDS = "64"
+CNT_BKP_BUFFER_SIZE_WORDS = "5" # must fit into BKPSRAM in memory.x
+
+# [unstable]
+# build-std = ["core"]                              # smaller binaries (nightly + rust-src)
+# build-std-features = ["panic_immediate_abort"]   # even smaller, panics become aborts

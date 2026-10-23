@@ -1,0 +1,115 @@
+#![no_std]
+#![no_main]
+
+mod init;
+mod last_reset;
+mod settings;
+mod ww;
+
+use cnt::cnt; // cnt::bkp_cnt! for counters in backup registers
+use defmt::{error, info};
+use rtt_target::{ChannelMode::NoBlockSkip, rtt_init};
+
+use cortex_m_rt::exception;
+use embassy_stm32::gpio::{Level, Output, Speed};
+use embassy_stm32::rcc::{Pll, PllMul, PllPreDiv, PllRDiv, PllSource, Sysclk};
+use embassy_time::Timer;
+
+#[embassy_executor::main]
+async fn main(spawner: embassy_executor::Spawner) {
+    // RTT channels: log output, WireWeaver up (device -> host) and down (host -> device).
+    // The WireWeaver up channel must hold a whole message + framing, see ww::MAX_MESSAGE_LEN.
+    let channels = rtt_init! {
+        up: {
+            0: {
+                size: 1024,
+                mode: NoBlockSkip,
+                name: "defmt"
+            }
+            1: {
+                size: 2048,
+                mode: NoBlockSkip,
+                name: "ww_up"
+            }
+        }
+        down: {
+            0: {
+                size: 2048,
+                mode: NoBlockSkip,
+                name: "ww_down"
+            }
+        }
+    };
+    rtt_target::set_defmt_channel(channels.up.0);
+    info!("nucleo_g0b1re starting...");
+    let last_reset = last_reset::boot(); // reset cause and crash record (src/last_reset.rs), logged
+    let mut config = embassy_stm32::Config::default();
+    // Clock tree: the Nucleo-G0B1RE has no HSE crystal fitted (X3 is open; the ST-LINK's MCO is routed to PF0 but
+    // not used here), so the 16 MHz HSI feeds the PLL: 16 MHz / 1 * 8 = 128 MHz VCO, R divider 2 = 64 MHz system
+    // clock, the chip's maximum. AHB and APB run at 64 MHz too (embassy's default prescalers).
+    config.rcc.pll = Some(Pll {
+        source: PllSource::HSI,
+        prediv: PllPreDiv::DIV1,
+        mul: PllMul::MUL8,
+        divp: None,
+        divq: None,
+        divr: Some(PllRDiv::DIV2),
+    });
+    config.rcc.sys = Sysclk::PLL1_R;
+    let p = embassy_stm32::init(config);
+    // Flash prefetch: embassy-stm32 0.6 sets the flash wait states on the G0 but leaves PRFTEN off, so sequential
+    // fetches stall with wait states (8-16% slower code at 64 MHz); embassy main turns it on itself (#7276).
+    // ES0548 2.2.10: on this dual-bank part prefetch can fail on a branch into the other flash bank, so all code has
+    // to stay in bank 1 (memory.x stops the link otherwise); clear PRFTEN instead when the code outgrows it.
+    embassy_stm32::pac::FLASH
+        .acr()
+        .modify(|w| w.set_prften(true));
+    init::init();
+
+    let settings = settings::SettingsStore::load(p.FLASH).await;
+    info!("label: {}", settings.get().label);
+
+    let led = Output::new(p.PA5, Level::Low, Speed::Low);
+
+    let state = ww::ServerState {
+        led,
+        last_reset,
+        settings,
+    };
+    ww::start(spawner, channels.up.1, channels.down.0, state);
+
+    info!("init done");
+    loop {
+        // the LED is switched over WireWeaver, see src/ww.rs
+        cnt!(loop_iterations: u32);
+        Timer::after_millis(1000).await;
+    }
+}
+
+#[exception]
+unsafe fn DefaultHandler(irqn: i16) {
+    cnt!(unhandled_exceptions: u32, warn);
+    cnt::bkp_cnt!(unhandled_exceptions_total: u32, warn);
+    error!("unhandled exception, IRQn = {}", irqn);
+}
+
+#[exception]
+unsafe fn NonMaskableInt() {
+    // a flash word with an ECC error, read by the settings store (a power cut while it was written): it reads as
+    // zeros, the store skips it
+    if ww_ecc_flash::on_nmi() {
+        return;
+    }
+    panic!("NMI: not a flash ECC error of a settings read");
+}
+
+#[exception]
+unsafe fn HardFault(ef: &cortex_m_rt::ExceptionFrame) -> ! {
+    let exc_return = bedrock_crash::exc_return!(); // first: lr still holds EXC_RETURN here
+    // Saved for the next boot (src/last_reset.rs, served as LastReset). With `probe-rs run` the debugger
+    // stops at the fault before this handler runs.
+    unsafe { bedrock_crash::capture_fault(ef, exc_return, last_reset::uptime_ms()) };
+    cnt::bkp_cnt!(hard_faults: u32, error);
+    error!("HardFault {}", defmt::Debug2Format(ef));
+    bedrock_crash::reset()
+}

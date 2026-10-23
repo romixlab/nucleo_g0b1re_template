@@ -1,0 +1,90 @@
+[package]
+name = "nucleo_g0b1re"
+version = "0.1.0"
+edition = "2024"
+
+# standalone crate: keeps an enclosing Cargo workspace from claiming it
+[workspace]
+
+[dependencies]
+defmt = "1.1"
+rtt-target = { version = "0.6", features = ["defmt"] } # defmt shares RTT with WireWeaver, instead of defmt-rtt
+cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
+cortex-m-rt = "0.7"
+portable-atomic = { version = "1.11", features = ["critical-section"] } # atomics for Cortex-M0(+)
+embassy-stm32 = { version = "0.6.0", features = ["defmt", "stm32g0b1re", "unstable-pac", "exti", "time", "time-driver-any"] }
+embassy-executor = { version = "0.10.0", features = ["platform-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
+embassy-time = { version = "0.5.1", features = ["defmt", "defmt-timestamp-uptime"] }
+embassy-sync = { version = "0.8.0", features = ["defmt"] }
+static_cell = "2.1"
+assign-resources = "0.5.0"
+cnt = "0.4"
+# crash capture: HardFault / panic record kept across reset, reset cause (src/last_reset.rs); the panic handler
+bedrock_crash = { git = "https://github.com/romixlab/embedded_bedrock", features = ["cortex-m", "defmt"] }
+# settings store in the SETTINGS flash region (src/settings.rs)
+ww_settings = { git = "https://github.com/vhrdtech/wire_weaver", features = ["defmt"] }
+# flash reads that survive an ECC error left by a power cut
+ww_ecc_flash = { git = "https://github.com/vhrdtech/wire_weaver", features = ["stm32g0"] }
+ww_user_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_error = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+# WireWeaver: API crate next to the firmware, served by src/ww.rs
+nucleo_g0b1re_api = { path = "../nucleo_g0b1re_api", features = ["defmt"] }
+wire_weaver = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["defmt"] }
+ww_client_server = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+embassy-futures = "0.1.2" # select in the server task (src/ww.rs)
+ww_firmware_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["build-id", "cortex-m", "defmt"] }
+ww_device = { git = "https://github.com/vhrdtech/wire_weaver", features = ["rtt", "embassy-time", "defmt"] }
+
+[build-dependencies]
+ww_firmware_info = { git = "https://github.com/vhrdtech/wire_weaver", features = ["build"] } # FirmwareInfo facts (build.rs)
+
+# See https://docs.rust-embedded.org/book/unsorted/speed-vs-size.html
+[profile.dev]
+codegen-units = 1
+debug = 2
+debug-assertions = true
+incremental = false
+opt-level = 3           # embedded dev builds are usually unusable at opt-level 0
+overflow-checks = true
+
+[profile.release]
+codegen-units = 1
+debug = 2               # debug info does not end up in flash
+debug-assertions = false
+incremental = false
+lto = "fat"
+opt-level = "z"         # 3 = speed, s = size, z = smaller
+overflow-checks = false
+
+# Do not optimize build scripts / proc-macros: faster clean builds
+[profile.dev.build-override]
+codegen-units = 8
+debug = false
+debug-assertions = false
+opt-level = 0
+overflow-checks = false
+
+[profile.release.build-override]
+codegen-units = 8
+debug = false
+debug-assertions = false
+opt-level = 0
+overflow-checks = false
+
+# embassy main instead of the crates.io release (--embassy main, TPL-28): uncomment, and take main's API in the code
+# as well (regenerate with --embassy main and compare: CamelCase PAC enums, interrupt binding last, ...).
+# [patch.crates-io]
+# embassy-stm32 = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-usb-driver = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-usb-synopsys-otg = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-hal-internal = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-embedded-hal = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-sync = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-time = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-time-driver = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-futures = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-time-queue-utils = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-executor = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-executor-macros = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+# embassy-executor-timer-queue = { git = "https://github.com/embassy-rs/embassy", rev = "262fdba545e8bc7affce0225c6ccd276b8125a86" }
+
