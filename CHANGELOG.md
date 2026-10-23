@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-23
+
 ### Added
 
 - `cnt run` as an alternative cargo runner (TPL-9): a commented `runner = "cnt run --chip STM32G0B1RE"` under the
