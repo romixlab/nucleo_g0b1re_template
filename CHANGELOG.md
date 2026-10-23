@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-23
+
 ### Added
 
 - Logo at the top of the README (light and dark), drawn by a Typst template in `docs/logo/` with the board name, the
