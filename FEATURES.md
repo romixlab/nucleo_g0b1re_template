@@ -46,3 +46,4 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | TPL-2 | CI: host workspace, firmware (dev and release), Python wheel and tests | 🧪 | `.github/workflows/ci.yml` |
 | TPL-3 | Template upgrades from embedded_bedrock (`bedrock_fw.json`, procedure in AGENTS.md) | ✅ | |
 | TPL-4 | Build info record in flash (`--build-info`) | 📋 | needs embedded_bedrock's crates buildable from git |
+| TPL-5 | Board map in `docs/board/`: top and bottom views, power tree, pin and solder bridge tables, `just board` | ✅ | boardmap (bedrock_board), facts from UM2324 and ST's MB1360 board file |

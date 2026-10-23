@@ -18,6 +18,9 @@ workspace: it builds for `thumbv6m-none-eabi` with its own `.cargo/config.toml` 
   with git SHA and build time from `build.rs`).
 - `nucleo_g0b1re_py/` — the `nucleo_g0b1re` Python module (PyO3, maturin; `uv` drives it: `just py`, `just test-py`).
 - `scripts/rename.py` — `just rename NAME [SHORT]`, run once by a user of the template.
+- `docs/board/` — the board map: `nucleo_g0b1re.toml` (what to draw, what every pin does) and the geometry JSON
+  extracted from ST's board file; the SVGs and `nucleo_g0b1re-pins.md` are rendered from them by `just board`
+  (boardmap from embedded_bedrock) and committed, so GitHub shows them. Edit the TOML, never the pictures.
 
 WireWeaver and embedded_bedrock crates come from git, pinned by the lock files; a change there is made upstream,
 not worked around here.

@@ -11,3 +11,5 @@ All notable changes to this project are documented here. The format follows
   (embassy, defmt, WireWeaver over RTT, settings store with the board's label, `cnt` counters with backup registers,
   crash capture), the `nucleo_g0b1re_api` API crate, the `nucleo_g0b1re_client` library, the `g0b1re` command line
   with live shell completion, the `nucleo_g0b1re` Python module, `just` recipes, CI and `just rename`.
+- Board map (`docs/board/`): top and bottom views with every header pin coloured by what it is for, solder bridges
+  with their defaults, the power tree and a pin table, drawn by boardmap from `nucleo_g0b1re.toml`; `just board`.

@@ -73,3 +73,8 @@ test-py:
 # Give the project your own name: `just rename my_board` (crates, directories, the command line name, env vars)
 rename name short="":
     uv run scripts/rename.py {{name}} {{short}}
+
+# Re-draw the board pictures in docs/board/ (top and bottom views, power tree, pin table) from the board description
+# with boardmap: `cargo install --git https://github.com/romixlab/embedded_bedrock bedrock_board_cli`
+board:
+    boardmap render docs/board/nucleo_g0b1re.toml

@@ -25,6 +25,17 @@ settings store in the last 8 KiB of flash with ECC-safe reads, `cnt` event count
 flip-link stack overflow protection, the ES0548 dual-bank prefetch guard. [FEATURES.md](FEATURES.md) lists all of it
 with its status; [CHANGELOG.md](CHANGELOG.md) the changes.
 
+## The board
+
+![Nucleo-G0B1RE top view: every header pin, coloured by what it is for](docs/board/nucleo_g0b1re-top.svg)
+
+Green pins are free, orange ones have a job on the board by default that a solder bridge removes (PA2/PA3 go to
+the ST-LINK's virtual COM port, PA5 drives LD4, PC13 is the USER button, PF0 carries the ST-LINK's 8 MHz MCO), red
+ones are the debug port and reset. [docs/board/](docs/board/) has the bottom view with every solder bridge and its
+default, the power tree (USB, VIN, E5V, the JP2 selection, the regulators) and
+[the pin table](docs/board/nucleo_g0b1re-pins.md) with a note per pin; `just board` re-draws them from
+`docs/board/nucleo_g0b1re.toml` with [boardmap](https://github.com/romixlab/embedded_bedrock) (bedrock_board).
+
 ## Toolchain
 
 ```sh
