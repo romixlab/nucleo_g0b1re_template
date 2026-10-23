@@ -10,7 +10,7 @@ fw_dir := "firmware/target/thumbv6m-none-eabi"
 default:
     @just --list
 
-# rustup and the firmware's target, probe-rs, flip-link, cnt, ww, boardmap, git's core.hooksPath (.githooks)
+# rustup and the firmware's target, probe-rs, flip-link, cnt, ww, boardmap; prints its plan first
 # Set up this PC; prints the steps that need root (`--root` runs them too, `--check` only reports what is missing)
 setup *args:
     uv run scripts/setup.py {{args}}

@@ -15,6 +15,12 @@ on:
 permissions:
   contents: read
 
+env:
+  # ww and boardmap cannot be installed from git yet: their workspaces take sibling repositories by path. Drop these
+  # once `cargo install --git` works for wire_weaver_cli and bedrock_board_cli.
+  SKIP: --skip ww --skip boardmap
+  SKIP_REASON: ww and boardmap skipped, their workspaces take sibling repositories by path (no cargo install --git yet)
+
 jobs:
   setup:
     name: just setup (${{ matrix.os }})
@@ -31,5 +37,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - uses: extractions/setup-just@v3
-      - run: just setup ${{ matrix.flags }}
-      - run: just setup --check ${{ matrix.flags == '--no-probe' && '--no-probe' || '' }}
+      - run: echo "::notice::${{ env.SKIP_REASON }}"
+      - run: just setup ${{ matrix.flags }} ${{ env.SKIP }}
+      - run: just setup --check ${{ matrix.flags == '--no-probe' && '--no-probe' || '' }} ${{ env.SKIP }}

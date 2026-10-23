@@ -68,13 +68,17 @@ just setup               # rustup, the thumbv6m-none-eabi target, probe-rs, flip
 just setup --check       # only report what is missing
 ```
 
-`scripts/setup.py` runs on Arch, Ubuntu / Debian and Windows and skips what is already there. Steps that need root or
-an administrator are printed for you to run, never run behind your back: the system packages (a C compiler, git,
-curl; on Windows the MSVC build tools), the udev rule that lets you open the ST-LINK on Linux
-([probe-rs](https://probe.rs/docs/getting-started/probe-setup/)) and ST's ST-LINK driver on Windows.
+`scripts/setup.py` runs on Arch, Ubuntu / Debian and Windows and skips what is already there. Before it changes
+anything it prints its plan. Some steps fetch a script from the internet and run it, the way these tools are meant
+to be installed: rustup's installer (`https://sh.rustup.rs`; on Windows winget installs rustup), probe-rs's installer
+(on Windows its PowerShell installer, run with `irm | iex` and `-ExecutionPolicy Bypass`), and probe-rs's udev rules
+file, pinned to a commit, written as root. The plan names each of them before it runs.
+
+Steps that need root or an administrator are printed for you to run, never run behind your back: the system
+packages (a C compiler, git, curl; on Windows the MSVC build tools), the udev rule that lets you open the ST-LINK on
+Linux ([probe-rs](https://probe.rs/docs/getting-started/probe-setup/)) and ST's ST-LINK driver on Windows.
 `just setup --root` runs them too, each shown first; `--no-probe` leaves out the probe's udev rule or driver (a build
-server). It also sets git's `core.hooksPath` to `.githooks`, the
-project's git hooks.
+server), `--skip TOOL` leaves out one step.
 
 ## Run
 

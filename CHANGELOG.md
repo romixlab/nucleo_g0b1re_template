@@ -8,8 +8,9 @@ All notable changes to this project are documented here. The format follows
 ### Added
 
 - `just setup` (`scripts/setup.py`, run with uv): sets up a fresh Arch, Ubuntu or Windows PC for the project (rustup
-  with the firmware's target, probe-rs, flip-link, cnt, ww, boardmap, git's hooks path); steps that need root are
-  printed, `--root` runs them; `just setup --check` reports what is missing, also as a CI job. On Windows `just`
+  with the firmware's target, probe-rs, flip-link, cnt, ww, boardmap); it prints its plan first, naming the
+  installer scripts it fetches and runs; steps that need root are printed, `--root` runs them; `just setup --check`
+  reports what is missing, also as a CI job. On Windows `just`
   runs the recipes with cmd, so Git's sh need not be on PATH, and `just install` uses cargo install.
 
 ## [0.1.2] - 2026-10-23

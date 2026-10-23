@@ -4,10 +4,11 @@
 """Set up this PC for the project: `just setup` (or `uv run scripts/setup.py`).
 
 Installs what building, flashing and talking to the board needs: rustup with the firmware's toolchain and target,
-probe-rs, flip-link, cnt, ww (WireWeaver CLI) and boardmap, and points git at the project's hooks (.githooks).
+probe-rs, flip-link, cnt, ww (WireWeaver CLI) and boardmap. Before it changes anything it prints its plan, naming
+every script it fetches from the internet and runs (rustup's and probe-rs's installers, probe-rs's udev rules file).
 Steps that need root or an administrator (system packages, the probe's udev rule, the ST-LINK driver) are printed
 for you to run; `--root` runs them too, each shown before it runs. `--check` only reports what is missing and exits
-with 1 if anything is (also a CI step).
+with 1 if anything is (also a CI step); `--skip TOOL` leaves a step out.
 
 Works on Arch, Ubuntu / Debian and Windows (winget); other Linux distributions and macOS get the same steps with
 the system packages described instead of a ready command. Python because it runs before Rust is installed: the
@@ -31,7 +32,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FIRMWARE = ROOT / "firmware"
-HOOKS_PATH = ".githooks"
 
 # Tools installed with cargo: (binary, what it is for, `cargo install` arguments)
 CARGO_TOOLS = [
@@ -50,7 +50,9 @@ CARGO_TOOLS = [
 ]
 
 PROBE_RS_INSTALLER = "https://github.com/probe-rs/probe-rs/releases/latest/download/probe-rs-tools-installer"
-PROBE_RS_UDEV = "https://probe.rs/files/69-probe-rs.rules"
+RUSTUP_INSTALLER = "https://sh.rustup.rs"
+# probe-rs's udev rules (https://probe.rs/files/69-probe-rs.rules), pinned to a commit of its source
+PROBE_RS_UDEV = "https://raw.githubusercontent.com/probe-rs/webpage/2770cdb68de046dbcab17806a81b1e76644b2f1c/public/files/69-probe-rs.rules"
 UDEV_DIRS = [Path("/etc/udev/rules.d"), Path("/usr/lib/udev/rules.d"), Path("/lib/udev/rules.d")]
 # The debug probe: its name and what a udev rules file for it contains (here its USB vendor and product id)
 PROBE = ("ST-LINK", ["0483", "374b"])  # the Nucleo's on-board ST-LINK/V2-1
@@ -156,6 +158,8 @@ class Step:
     manual: str = ""
     # A later step cannot work without this one (build tools before cargo install)
     prerequisite: bool = False
+    # What it fetches from the internet and runs (an installer script), said in the plan before it runs
+    remote: str = ""
 
 
 def cargo_bin() -> Path:
@@ -294,13 +298,14 @@ def rustup_step(p: Platform) -> Step:
             ok = run(["winget", "install", "--id", "Rustlang.Rustup", "-e",
                       "--accept-source-agreements", "--accept-package-agreements"])  # fmt: skip
         else:
-            script = download("https://sh.rustup.rs", ".sh")
+            script = download(RUSTUP_INSTALLER, ".sh")
             ok = run(["sh", str(script), "-y", "--profile", "minimal", "--default-toolchain", "stable"])
             script.unlink(missing_ok=True)
         add_cargo_bin_to_path()
         return ok and which("rustup") is not None
 
-    return Step("rustup", check, install)
+    remote = "" if p.kind == "windows" else f"runs rustup's installer script from {RUSTUP_INSTALLER}"
+    return Step("rustup", check, install, remote=remote)
 
 
 def toolchain_step() -> Step:
@@ -347,7 +352,13 @@ def probe_rs_step(p: Platform) -> Step:
         add_cargo_bin_to_path()
         return ok
 
-    return Step("probe-rs", lambda: version_of("probe-rs"), install)
+    if p.kind == "windows":
+        remote = (
+            f"runs probe-rs's PowerShell installer from {PROBE_RS_INSTALLER}.ps1 (irm | iex, ExecutionPolicy Bypass)"
+        )
+    else:
+        remote = f"runs probe-rs's installer script from {PROBE_RS_INSTALLER}.sh"
+    return Step("probe-rs", lambda: version_of("probe-rs"), install, remote=remote)
 
 
 def cargo_tool_step(binary: str, what: str, args: list[str]) -> Step:
@@ -389,27 +400,15 @@ def probe_access_step(p: Platform) -> Step | None:
             f"curl -fsSL {PROBE_RS_UDEV} | {p.sudo}tee /etc/udev/rules.d/69-probe-rs.rules >/dev/null",
             f"{p.sudo}udevadm control --reload && {p.sudo}udevadm trigger || true",
         ],
+        remote=f"writes probe-rs's udev rules from {PROBE_RS_UDEV} as root",
     )
-
-
-def git_hooks_step() -> Step:
-    def check() -> Status:
-        if not (ROOT / ".git").exists():
-            return Status(True, "not a git checkout, skipped")
-        got = (output("git", "-C", str(ROOT), "config", "core.hooksPath") or "").strip()
-        return Status(got == HOOKS_PATH, f"core.hooksPath = {got or '(not set)'}")
-
-    def install() -> bool:
-        return run(["git", "-C", str(ROOT), "config", "core.hooksPath", HOOKS_PATH])
-
-    return Step("git hooks", check, install)
 
 
 def prerequisite_step(tool: str, how: str) -> Step:
     return Step(tool, lambda: version_of(tool), manual=how)
 
 
-def steps_for(p: Platform, probe: bool) -> list[Step]:
+def steps_for(p: Platform, probe: bool, skip: set[str]) -> list[Step]:
     win = p.kind == "windows"
     steps = [
         prerequisite_step(
@@ -424,12 +423,11 @@ def steps_for(p: Platform, probe: bool) -> list[Step]:
         toolchain_step(),
         probe_rs_step(p),
         *(cargo_tool_step(*t) for t in CARGO_TOOLS),
-        git_hooks_step(),
     ]
     access = probe_access_step(p) if probe else None
     if access:
         steps.append(access)
-    return steps
+    return [st for st in steps if st.name not in skip]
 
 
 # ------------------------------------------------------------------------------------------------------------------ main
@@ -460,12 +458,15 @@ def main() -> int:
     ap.add_argument(
         "--no-probe", action="store_true", help="leave out the probe's udev rule or driver (CI, a build server)"
     )
+    ap.add_argument("--skip", action="append", default=[], metavar="TOOL", help="leave this step out (repeatable)")
     args = ap.parse_args()
 
     p = detect_platform()
     add_cargo_bin_to_path()
     print(S.bold(f"Setting up {ROOT.name} on {p.name}") if not args.check else S.bold(f"Checking {p.name}"))
-    steps = steps_for(p, probe=not args.no_probe)
+    steps = steps_for(p, probe=not args.no_probe, skip=set(args.skip))
+    for name in args.skip:
+        print(S.warn("-") + f" {name:<22} skipped (--skip)")
 
     if args.check:
         missing = 0
@@ -476,6 +477,15 @@ def main() -> int:
         if missing:
             print(S.bad(f"\n{missing} missing:") + " `just setup` installs them (root steps are printed)")
         return 1 if missing else 0
+
+    # The plan: what is missing and how each gets there, remote scripts named, before anything changes
+    todo = [step for step in steps if not step.check().ok]
+    if todo:
+        print(S.bold("Plan:"))
+        for step in todo:
+            how = "install" if step.install else ("run as root (--root)" if args.root and step.root_commands else "you")
+            print(f"  {step.name:<22} {how}" + (f"; {step.remote}" if step.remote else ""))
+        print()
 
     for_person: list[tuple[Step, Status]] = []
     failed: list[str] = []
@@ -506,6 +516,8 @@ def main() -> int:
         print(S.bold("\nThese need you (root or administrator, or a download):"))
         for step, st in for_person:
             print(f"\n  {S.bold(step.name)}: {st.detail}")
+            if step.remote:
+                print(f"    ({step.remote})")
             for cmd in step.root_commands:
                 print(f"    {cmd}")
             if step.manual:
