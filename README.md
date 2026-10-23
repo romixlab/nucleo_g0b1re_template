@@ -73,6 +73,7 @@ On Linux the ST-LINK needs a udev rule, see [probe-rs](https://probe.rs/docs/get
 
 ```sh
 just run                 # build, flash and run the dev firmware with its defmt log (Ctrl-C: the firmware keeps running)
+just cnt                 # same, but through `cnt run`: defmt log plus the event counters as they change
 just flash               # release firmware through the probe
 just install             # build and install the `g0b1re` command line
 g0b1re info              # firmware, build id, label, last reset

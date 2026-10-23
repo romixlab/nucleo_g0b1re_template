@@ -146,18 +146,18 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
 name = "cnt"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c57ebe0c01fec909b51cd496275ad386024228efbd5c25f2d0c0a7ae40863ab0"
+checksum = "f08122f90329994ec49b3d3e47109534fd9e7d6fc169e9614f34ac61f901e6fb"
 dependencies = [
  "cnt_macro",
 ]
 
 [[package]]
 name = "cnt_macro"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eea5da6a5ce73a385e09f92bc63fd4aeb716f8bcda0ad2883479de4f00499293"
+checksum = "97c5b66ec8f736a6f737f286ab8e166931b4c295326e43b8b0045830f61782ea"
 dependencies = [
  "proc-macro2",
  "quote",

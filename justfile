@@ -28,6 +28,10 @@ fmt:
 run *args:
     cd firmware && cargo run {{args}}
 
+# Build, flash and run the dev firmware showing the defmt log plus live counters as they change (cnt run; cargo install cnt_cli)
+cnt *args:
+    cd firmware && cargo build && cnt run {{args}}
+
 # Build the release firmware
 build-fw:
     cd firmware && cargo build --release --locked

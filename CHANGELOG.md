@@ -5,6 +5,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `cnt run` as an alternative cargo runner (TPL-9): a commented `runner = "cnt run --chip STM32G0B1RE"` under the
+  probe-rs one in `firmware/.cargo/config.toml`, and a `just cnt` recipe; both flash, reset and show the defmt log
+  plus the live event counters as they change, without switching the default runner. `cnt` bumped to 0.5.
+
 ## [0.1.1] - 2026-10-23
 
 ### Added

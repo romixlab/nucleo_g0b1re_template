@@ -1,5 +1,6 @@
 [target.thumbv6m-none-eabi]
 runner = "probe-rs run --chip STM32G0B1RE"
+# runner = "cnt run --chip STM32G0B1RE" # adds the defmt log plus live counters (cargo install cnt_cli), `just cnt`
 # Stack overflow protection: the stack goes below .data/.bss and overflows fault (cargo install flip-link)
 linker = "flip-link"
 
