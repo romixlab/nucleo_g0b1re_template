@@ -303,7 +303,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                     board.set_label(name).await?;
                     println!("{GREEN}label stored{GREEN:#}: {name}");
                 }
-                None => println!("{}", board.label().await?),
+                None => match board.label().await?.as_str() {
+                    "" => println!("{DIM}(none){DIM:#}"),
+                    label => println!("{label}"),
+                },
             }
             board.disconnect().await;
         }
