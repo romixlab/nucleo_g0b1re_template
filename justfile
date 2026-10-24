@@ -8,6 +8,8 @@ set dotenv-load
 
 chip := "STM32G0B1RETx"
 fw_dir := "firmware/target/thumbv6m-none-eabi"
+# the same from inside firmware/
+fw_elf_dir := "target/thumbv6m-none-eabi"
 # The probe every recipe uses: the Nucleo-64's own ST-LINK/V2-1 (0483:374b), never another probe on the PC; with two
 # Nucleos attached, G0B1RE_PROBE=SERIAL (`probe-rs list`) picks one, `g0b1re` takes the same variable
 probe := "0483:374b" + if env("G0B1RE_PROBE", "") == "" { "" } else { ":" + env("G0B1RE_PROBE") }
@@ -51,8 +53,10 @@ fmt:
     cargo fmt --all
     cd firmware && cargo fmt --all
 
-# Build, flash and run the dev firmware with its defmt log (probe-rs); Ctrl-C stops the log, the firmware keeps running
+# Build, flash and run the dev firmware with its defmt log (probe-rs); Ctrl-C stops the log, the firmware keeps running.
+# The ELF goes into the ELF directory by its build id (cnt elf add), so `g0b1re counters|log` decode from anywhere
 run *args:
+    cd firmware && cargo build {{args}} && cnt elf add {{fw_elf_dir}}/debug/nucleo_g0b1re
     cd firmware && cargo run --config "{{runner}}" {{args}}
 
 # Build, flash and run the dev firmware showing the defmt log plus live counters as they change (cnt run; cargo install cnt_cli)
@@ -63,8 +67,9 @@ cnt *args:
 build-fw:
     cd firmware && cargo build --release --locked
 
-# Flash the release firmware through the probe and reset the board
+# Flash the release firmware through the probe and reset the board; its ELF goes into the ELF directory (cnt elf add)
 flash: build-fw
+    cnt elf add {{fw_dir}}/release/nucleo_g0b1re
     probe-rs download --chip {{chip}} --probe {{probe}} {{fw_dir}}/release/nucleo_g0b1re
     probe-rs reset --chip {{chip}} --probe {{probe}}
 
