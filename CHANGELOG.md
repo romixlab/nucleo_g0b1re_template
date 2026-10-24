@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-24
+
 ### Added
 
 - `pins` in the API (0.3.0): the firmware serves `ww_pin_diag::PinDiag` on every pin the board map marks free (50
