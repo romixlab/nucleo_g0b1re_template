@@ -5,6 +5,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- API evolution check: `nucleo_g0b1re_api/api_snapshots/` holds the snapshot of the released 0.1.0, and a test of
+  the API crate (WireWeaver's `wire_weaver_evolution`, strict) fails when the API changes without the version bump
+  the change needs, naming the version to use. `just api-check` runs it, `just test` and CI too; `just api-save`
+  records a release; `.githooks/pre-commit` refuses a commit that touches the API crate while the check fails. `just
+  hooks` (also the last step of `just setup`) turns it on after the hooks already in `.git/hooks/` and leaves
+  `core.hooksPath` alone. `just rename` saves the renamed crate's first snapshot. README: Changing the API.
+- CI uses `actions/checkout@v5` (v4 runs on the deprecated Node 20).
+
 ## [0.1.3] - 2026-10-24
 
 ### Added

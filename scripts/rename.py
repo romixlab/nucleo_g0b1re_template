@@ -6,11 +6,15 @@
 Renames the crates and their directories (`nucleo_g0b1re_api` -> `my_board_api`, ...), the API trait
 (`NucleoG0b1reApi` -> `MyBoardApi`), the generated GID constant, the Python module, the command line binary (`g0b1re`
 -> SHORT, the new name itself when SHORT is left out) and its environment variables (`G0B1RE_PROBE` -> `MY_BOARD_PROBE`).
+The API snapshots in `nucleo_g0b1re_api/api_snapshots/` describe the template's API crate, not the renamed one: they
+are removed, and the renamed crate's first snapshot is saved with `ww api save` (or left to `just api-save`).
 Prose that names the board ("Nucleo G0B1RE", the chip, the LED pin) stays: it is listed at the end for a look.
 Run it once, in a clean checkout, before changing anything else.
 """
 
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -53,6 +57,8 @@ def main() -> int:
             return 2
     root = Path(__file__).resolve().parent.parent
     pairs = replacements(new, short)
+    for snapshot in sorted((root / f"{OLD}_api" / "api_snapshots").glob(f"{OLD}_api_*.ron")):
+        snapshot.unlink()
     changed_files = 0
     for path in sorted(root.rglob("*")):
         if any(part in SKIP_DIRS for part in path.relative_to(root).parts):
@@ -75,6 +81,11 @@ def main() -> int:
             continue
         path.rename(path.with_name(path.name.replace(OLD, new)))
         renamed += 1
+    api_crate = f"{new}_api"
+    if shutil.which("ww"):
+        subprocess.run(["ww", "api", "save", api_crate], cwd=root, check=False)
+    else:
+        print("ww is not installed (just setup installs it): record the API with `just api-save` before committing")
     print(f"{changed_files} files edited, {renamed} paths renamed: {OLD} -> {new}, {OLD_SHORT} -> {short}")
     print("Left as they were, have a look: README.md and firmware/README.md prose, the chip (STM32G0B1RE / STM32G0B1RETx),")
     print("the LED pin (PA5) in firmware/src/main.rs, `description` lines in Cargo.toml files.")

@@ -64,7 +64,7 @@ installed (Windows: `winget install Casey.Just` and
 `winget install astral-sh.uv`):
 
 ```sh
-just setup               # rustup, the thumbv6m-none-eabi target, probe-rs, flip-link, cnt, ww, boardmap
+just setup               # rustup, the thumbv6m-none-eabi target, probe-rs, flip-link, cnt, ww, boardmap, git hooks
 just setup --check       # only report what is missing
 ```
 
@@ -79,6 +79,12 @@ packages (a C compiler, git, curl; on Windows the MSVC build tools), the udev ru
 Linux ([probe-rs](https://probe.rs/docs/getting-started/probe-setup/)) and ST's ST-LINK driver on Windows.
 `just setup --root` runs them too, each shown first; `--no-probe` leaves out the probe's udev rule or driver (a build
 server), `--skip TOOL` leaves out one step.
+
+The last step turns on the project's git hooks (`just hooks`, see [Changing the API](#changing-the-api)): for each
+hook in `.githooks/` it puts a small hook into `.git/hooks/` that first runs the hook that was there before (kept as
+`<name>.chained`) and then the tracked one, so hooks you or other tools installed keep working. It does not set
+`core.hooksPath`; when that is set already, it prints the line to add to the hooks there. `just hooks --remove` takes
+them out again and puts the old hooks back.
 
 ## Run
 
@@ -130,10 +136,39 @@ with nucleo_g0b1re.Device() as dev:         # Device(probe_serial="...", elf="fi
 4. Add a typed method to `Nucleo` in `nucleo_g0b1re_client/src/lib.rs`, a subcommand in `nucleo_g0b1re_cli/src/main.rs`
    and a method of `Device` in `nucleo_g0b1re_py/src/lib.rs`. The generated client (`board.raw()`) already has every
    item, the typed layers are for the names and errors.
-5. Bump `nucleo_g0b1re_api`'s version: the crate name and version identify the API on the wire.
+5. Bump `nucleo_g0b1re_api`'s version: the crate name and version identify the API on the wire. Which bump a change
+   needs is checked, see [Changing the API](#changing-the-api).
 
 `just test` and `just lint` run what CI runs: the host workspace, the firmware (dev and release build) and the
 Python module. `just deploy` brings a PC and the board on its probe up to `main` in one step.
+
+## Changing the API
+
+Firmware already on boards and hosts built against an older API keep working together as long as the API only
+changes in compatible ways ([WireWeaver's evolution rules](https://github.com/vhrdtech/wire_weaver/blob/master/docs/evolution/rules.md)).
+Every released version of `nucleo_g0b1re_api` has a snapshot of its traits and types in
+`nucleo_g0b1re_api/api_snapshots/`, committed with the release, and a test of the API crate
+(`nucleo_g0b1re_api/tests/evolution.rs`) compares the source with the newest snapshot. It fails when the API changed
+without the version bump the change needs, and names the version to put into `nucleo_g0b1re_api/Cargo.toml`:
+
+- a compatible change (a new method, property or stream at the end of the trait, a new type) needs the compatible
+  position: `0.1.0` -> `0.1.1` before 1.0, the minor after;
+- a breaking change (a method renamed or removed, a new one inserted between existing ones, a changed argument
+  type) needs the breaking position: `0.1.0` -> `0.2.0` before 1.0, the major after.
+
+The flow:
+
+1. Change the trait in `nucleo_g0b1re_api/src/lib.rs` and bump the crate's version; `just api-check` runs the check
+   on its own (`just test` and CI run it too).
+2. Commit. With the hooks on (`just setup` or `just hooks`), `.githooks/pre-commit` runs `just api-check` whenever
+   the commit touches `nucleo_g0b1re_api/` and refuses the commit while the check fails. `git commit --no-verify`
+   skips it for a work-in-progress commit; CI still checks.
+3. When the version is released (flashed to boards, a host tool shipped), record it with `just api-save`
+   (`ww api save`, which refuses a version that is not bumped enough) and commit the new file in `api_snapshots/`.
+   Until then the check compares with the previous release, so the version can stay bumped while you work.
+
+A missing snapshot fails the check too, so it is never skipped by accident; `just rename` removes the template's
+snapshot and saves the renamed crate's first one.
 
 ## Template upgrades
 

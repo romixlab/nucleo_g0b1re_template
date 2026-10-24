@@ -16,3 +16,7 @@ wire_weaver = { git = "https://github.com/vhrdtech/wire_weaver", default-feature
 ww_firmware_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["cortex-m"] }
 # UserInfo: the unit's name, kept in the firmware's settings store
 ww_user_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+
+[dev-dependencies]
+# the evolution check (tests/evolution.rs): this crate compared with its snapshots in api_snapshots/
+wire_weaver_evolution = { git = "https://github.com/vhrdtech/wire_weaver" }

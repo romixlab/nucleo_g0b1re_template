@@ -14,9 +14,23 @@ default:
 setup *args:
     uv run scripts/setup.py {{args}}
 
+# Turn on the project's git hooks in .githooks/ (the API check before a commit), after the hooks already there;
+# `--check` reports, `--remove` puts the old ones back (`just setup` runs it too)
+hooks *args:
+    uv run scripts/hooks.py {{args}}
+
 # Host tests (the workspace; the Python module's tests: `just test-py`)
 test *flags:
     cargo test --workspace --locked {{flags}}
+
+# Compare the API crate with its snapshots in nucleo_g0b1re_api/api_snapshots/: fails on a change without the version
+# bump it needs, and says which version to put into nucleo_g0b1re_api/Cargo.toml (also part of `just test`)
+api-check:
+    cargo test -p nucleo_g0b1re_api --test evolution
+
+# Record the released version of the API (ww api save, refuses a version not bumped enough); commit api_snapshots/
+api-save:
+    ww api save nucleo_g0b1re_api
 
 # Format check and clippy for the host workspace and the firmware; the firmware's release build must fit
 lint:

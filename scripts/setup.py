@@ -4,7 +4,8 @@
 """Set up this PC for the project: `just setup` (or `uv run scripts/setup.py`).
 
 Installs what building, flashing and talking to the board needs: rustup with the firmware's toolchain and target,
-probe-rs, flip-link, cnt, ww (WireWeaver CLI) and boardmap. Before it changes anything it prints its plan, naming
+probe-rs, flip-link, cnt, ww (WireWeaver CLI) and boardmap, and turns on the project's git hooks (`scripts/hooks.py`,
+chained to the hooks already there). Before it changes anything it prints its plan, naming
 every script it fetches from the internet and runs (rustup's and probe-rs's installers, probe-rs's udev rules file).
 Steps that need root or an administrator (system packages, the probe's udev rule, the ST-LINK driver) are printed
 for you to run; `--root` runs them too, each shown before it runs. `--check` only reports what is missing and exits
@@ -408,6 +409,16 @@ def prerequisite_step(tool: str, how: str) -> Step:
     return Step(tool, lambda: version_of(tool), manual=how)
 
 
+def git_hooks_step() -> Step:
+    hooks = [sys.executable, str(ROOT / "scripts" / "hooks.py")]
+
+    def check() -> Status:
+        out = subprocess.run([*hooks, "--check"], capture_output=True, text=True, check=False)
+        return Status(out.returncode == 0, out.stdout.strip())
+
+    return Step("git hooks", check, lambda: run(hooks))
+
+
 def steps_for(p: Platform, probe: bool, skip: set[str]) -> list[Step]:
     win = p.kind == "windows"
     steps = [
@@ -423,6 +434,7 @@ def steps_for(p: Platform, probe: bool, skip: set[str]) -> list[Step]:
         toolchain_step(),
         probe_rs_step(p),
         *(cargo_tool_step(*t) for t in CARGO_TOOLS),
+        git_hooks_step(),
     ]
     access = probe_access_step(p) if probe else None
     if access:

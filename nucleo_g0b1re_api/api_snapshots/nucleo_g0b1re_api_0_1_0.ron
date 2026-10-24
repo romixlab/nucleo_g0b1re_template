@@ -1,0 +1,67 @@
+// nucleo_g0b1re_api 0.1.0 traits and types, saved by `ww api save`.
+// Do not edit, bump the crate version and save a new snapshot instead.
+// shrink_wrap sha256: d62f71f6fefc9b0d4523d8877d2e12e4bfef346eb47e90cc802fcc309b2f9c0a
+(magic: 2837124336, ww_self_version: (major: 0, minor: 3, patch: 0), root: (docs: [
+    "WireWeaver API of the nucleo_g0b1re firmware (`../nucleo_g0b1re_api`), served by `../firmware/src/ww.rs`.",
+    "",
+    "The crate name and version identify the API on the wire (`NUCLEO_G_0_B_1_RE_API_FULL_GID`), so bump the version with every",
+    "change and follow the WireWeaver evolution rules to stay compatible with deployed devices and hosts:",
+    "https://github.com/vhrdtech/wire_weaver/blob/master/docs/evolution/rules.md",
+    "Data types used in the API go here too, with `#[derive_shrink_wrap]`.",
+], crate_idx: 0, trait_name: "nucleo_g0b1re_api", items: [
+    (id: 0, kind: Trait(trait_idx: 3, omitted: None), multiplicity: Flat, since: None, ident: "NucleoG0b1reApi", docs: [], optional: None, meta: None),
+], compact_id: None, meta: None), types: [], traits: [
+    SkippedFullVersion(crate_idx: 1, trait_name: "FirmwareInfo", signature: [
+        6,
+        165,
+        12,
+        214,
+        96,
+        97,
+        121,
+        203,
+    ]),
+    SkippedFullVersion(crate_idx: 1, trait_name: "LastReset", signature: [
+        170,
+        9,
+        161,
+        148,
+        181,
+        136,
+        52,
+        112,
+    ]),
+    SkippedFullVersion(crate_idx: 2, trait_name: "UserInfo", signature: [
+        252,
+        88,
+        68,
+        171,
+        127,
+        225,
+        113,
+        53,
+    ]),
+    InLine(level: (docs: [
+        "nucleo_g0b1re device",
+    ], crate_idx: 0, trait_name: "NucleoG0b1reApi", items: [
+        (id: 0, kind: Method(args: [], return_ty: None, errors: None), multiplicity: Flat, since: None, ident: "led_on", docs: [
+            "Turn the LED on",
+        ], optional: None, meta: None),
+        (id: 1, kind: Method(args: [], return_ty: None, errors: None), multiplicity: Flat, since: None, ident: "led_off", docs: [
+            "Turn the LED off",
+        ], optional: None, meta: None),
+        (id: 2, kind: Trait(trait_idx: 0, omitted: None), multiplicity: Flat, since: None, ident: "firmware", docs: [
+            "Which firmware runs and its build id (the device contract)",
+        ], optional: None, meta: None),
+        (id: 3, kind: Trait(trait_idx: 1, omitted: None), multiplicity: Flat, since: None, ident: "last_reset", docs: [
+            "Why the device last reset, with the crash record after a fault or panic",
+        ], optional: None, meta: None),
+        (id: 4, kind: Trait(trait_idx: 2, omitted: None), multiplicity: Flat, since: None, ident: "label", docs: [
+            "Name the user gives this unit, kept in flash",
+        ], optional: None, meta: None),
+    ], compact_id: None, meta: None), crate_idx: 0),
+], ext_crates: [
+    (crate_id: "nucleo_g0b1re_api", version: (major: 0, minor: 1, patch: 0, pre: None, build: None)),
+    (crate_id: "ww_firmware_info", version: (major: 0, minor: 1, patch: 0, pre: None, build: None)),
+    (crate_id: "ww_user_info", version: (major: 0, minor: 1, patch: 0, pre: None, build: None)),
+], root_omitted: None)
