@@ -1,6 +1,8 @@
 [target.thumbv6m-none-eabi]
-runner = "probe-rs run --chip STM32G0B1RE"
-# runner = "cnt run --chip STM32G0B1RE" # adds the defmt log plus live counters (cargo install cnt_cli), `just cnt`
+# Only the Nucleo-64's own ST-LINK/V2-1 (0483:374b), never another probe on the PC: one with someone else's board
+# would be flashed. `just run` adds the serial of G0B1RE_PROBE for a PC with two Nucleos.
+runner = "probe-rs run --chip STM32G0B1RE --probe 0483:374b"
+# runner = "cnt run --chip STM32G0B1RE --probe 0483:374b" # adds the defmt log plus live counters (cargo install cnt_cli), `just cnt`
 # Stack overflow protection: the stack goes below .data/.bss and overflows fault (cargo install flip-link)
 linker = "flip-link"
 

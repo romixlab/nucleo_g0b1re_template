@@ -3,9 +3,15 @@
 
 # Windows runs the recipes with cmd (`cd x && y` works there too): not every PC has Git's sh on PATH
 set windows-shell := ["cmd.exe", "/c"]
+# G0B1RE_PROBE (below) can live in .env, kept out of git
+set dotenv-load
 
 chip := "STM32G0B1RETx"
 fw_dir := "firmware/target/thumbv6m-none-eabi"
+# The probe every recipe uses: the Nucleo-64's own ST-LINK/V2-1 (0483:374b), never another probe on the PC; with two
+# Nucleos attached, G0B1RE_PROBE=SERIAL (`probe-rs list`) picks one, `g0b1re` takes the same variable
+probe := "0483:374b" + if env("G0B1RE_PROBE", "") == "" { "" } else { ":" + env("G0B1RE_PROBE") }
+runner := "target.thumbv6m-none-eabi.runner='probe-rs run --chip STM32G0B1RE --probe " + probe + "'"
 
 default:
     @just --list
@@ -47,11 +53,11 @@ fmt:
 
 # Build, flash and run the dev firmware with its defmt log (probe-rs); Ctrl-C stops the log, the firmware keeps running
 run *args:
-    cd firmware && cargo run {{args}}
+    cd firmware && cargo run --config "{{runner}}" {{args}}
 
 # Build, flash and run the dev firmware showing the defmt log plus live counters as they change (cnt run; cargo install cnt_cli)
 cnt *args:
-    cd firmware && cargo build && cnt run {{args}}
+    cd firmware && cargo build && cnt run --probe {{probe}} {{args}}
 
 # Build the release firmware
 build-fw:
@@ -59,12 +65,12 @@ build-fw:
 
 # Flash the release firmware through the probe and reset the board
 flash: build-fw
-    probe-rs download --chip {{chip}} {{fw_dir}}/release/nucleo_g0b1re
-    probe-rs reset --chip {{chip}}
+    probe-rs download --chip {{chip}} --probe {{probe}} {{fw_dir}}/release/nucleo_g0b1re
+    probe-rs reset --chip {{chip}} --probe {{probe}}
 
 # Attach to the running dev firmware's defmt log without flashing (stop it before using `g0b1re`: one probe, one user)
 attach:
-    probe-rs attach --chip {{chip}} {{fw_dir}}/debug/nucleo_g0b1re
+    probe-rs attach --chip {{chip}} --probe {{probe}} {{fw_dir}}/debug/nucleo_g0b1re
 
 # Build the `g0b1re` command line and install it on this PC (with tpm on PATH through tpm install, else cargo install)
 [unix]

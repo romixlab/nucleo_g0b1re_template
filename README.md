@@ -99,7 +99,9 @@ g0b1re label "bench 1"   # stored in the board's flash
 g0b1re last-reset --clear
 ```
 
-A probe can be opened by one program at a time: stop `just run` / `just attach` before using `g0b1re`. Connecting
+The recipes and `cargo run` use only the Nucleo's own ST-LINK/V2-1 (USB id `0483:374b`), never another probe on the
+PC; with two Nucleos attached, `G0B1RE_PROBE=SERIAL` (from `probe-rs list`, in the environment or in a `.env` file)
+picks one. A probe can be opened by one program at a time: stop `just run` / `just attach` before using `g0b1re`. Connecting
 scans the RAM for the RTT control block (about 1.5 s through an ST-LINK); `--elf firmware/target/thumbv6m-none-eabi/debug/nucleo_g0b1re`
 (or `G0B1RE_ELF`) takes the address from the firmware's ELF instead. With several probes attached, `--probe SERIAL`
 (`g0b1re probes` lists them, and the shell completes the serials: `source <(COMPLETE=bash g0b1re)`).
