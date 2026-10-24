@@ -89,6 +89,9 @@ impl Nucleo {
                 item: "LogDefmt::frames",
                 source,
             })?;
+        // A resume from the start comes as two runs, the stored backlog and the live log, interleaved: they are put
+        // back into position order before decoding, so lines come once and in order
+        let mut order = InOrder::default();
         let mut decoder = table.new_stream_decoder();
         loop {
             let event = frames
@@ -96,16 +99,38 @@ impl Nucleo {
                 .await
                 .map_err(|e| Error::Decode(format!("log stream: {e}")))?;
             match event {
-                StreamEvent::Item { value, .. } => {
-                    for line in decode(value.bytes.as_slice(), &mut *decoder) {
-                        on_line(&line);
-                    }
-                }
-                StreamEvent::Gap { units, cause, .. } => {
-                    on_line(&format!("--- {units} log messages lost ({cause:?}) ---"))
+                StreamEvent::Item {
+                    pos, units, value, ..
+                } => order.push(pos, units, Piece::Frames(value.bytes.into_inner())),
+                StreamEvent::Gap {
+                    at, units, cause, ..
+                } => order.push(at, units, Piece::Lost(format!("{cause:?}"))),
+                StreamEvent::Resumed { cursor, ended, .. } => {
+                    // a new session (the board rebooted) counts from 0, the decoder starts afresh
+                    let next = if ended.is_some() { 0 } else { cursor.pos.0 };
+                    order = InOrder::starting_at(next);
+                    decoder = table.new_stream_decoder();
+                    continue;
                 }
                 StreamEvent::Closed | StreamEvent::Disconnected => return Ok(()),
-                _ => {}
+                _ => continue,
+            }
+            for (units, piece) in order.ready() {
+                match piece {
+                    Piece::Frames(bytes) => {
+                        // an item sent again from inside it is whole, only its last `units` frames are new
+                        let lines = decode(&bytes, &mut *decoder);
+                        let skip = lines.len().saturating_sub(units as usize);
+                        for line in &lines[skip..] {
+                            on_line(line);
+                        }
+                    }
+                    Piece::Lost(cause) => {
+                        on_line(&format!("--- {units} log messages lost ({cause}) ---"));
+                        // the frame cut by the loss can't be completed
+                        decoder = table.new_stream_decoder();
+                    }
+                }
             }
         }
     }
@@ -182,6 +207,53 @@ impl Nucleo {
         };
         let report = ww_report::report::collect_report(&self.contract, &options).await;
         ww_report::report::render_report(&report)
+    }
+}
+
+/// A piece of a positioned stream: frames, or units the device lost.
+enum Piece {
+    Frames(Vec<u8>),
+    Lost(String),
+}
+
+/// Puts the pieces of a stream's runs back into position order: hands out each unit once, in order.
+#[derive(Default)]
+struct InOrder {
+    next: u64,
+    pending: std::collections::BTreeMap<u64, (u64, Piece)>,
+}
+
+impl InOrder {
+    fn starting_at(next: u64) -> Self {
+        InOrder {
+            next,
+            pending: Default::default(),
+        }
+    }
+
+    fn push(&mut self, pos: u64, units: u64, piece: Piece) {
+        // a resend of what was handed out already
+        if pos + units <= self.next {
+            return;
+        }
+        self.pending.entry(pos).or_insert((units, piece));
+    }
+
+    /// The pieces that follow on what was handed out, each with the number of its units that are new.
+    fn ready(&mut self) -> Vec<(u64, Piece)> {
+        let mut out = vec![];
+        while let Some(entry) = self.pending.first_entry() {
+            let pos = *entry.key();
+            if pos > self.next {
+                break;
+            }
+            let (units, piece) = entry.remove();
+            if pos + units > self.next {
+                out.push((pos + units - self.next, piece));
+                self.next = pos + units;
+            }
+        }
+        out
     }
 }
 
