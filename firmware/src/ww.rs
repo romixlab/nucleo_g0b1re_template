@@ -1,18 +1,20 @@
 //! WireWeaver server: implements `nucleo_g0b1re_api::NucleoG0b1reApi` (defined in `../nucleo_g0b1re_api/src/lib.rs`) for
-//! [ServerState] and serves it over RTT (the debug probe). The LED is here, the device contract (`device`) in
-//! `ww/device.rs`.
+//! [ServerState] and serves it over RTT (the debug probe). `led_on` / `led_off` are here, the device contract
+//! (`device`) in `ww/device.rs`, LD4's indication (`leds`) in `ww/leds.rs`, the clock a host steers (`clock`) in
+//! `ww/clock.rs`.
 //!
 //! To add a method, property or stream: declare it in the API trait, then implement it here, `ww_codegen!` below
 //! regenerates the dispatch code and the compiler lists what is missing. Extend [ServerState] with the peripherals
 //! and data the implementations need. See https://github.com/vhrdtech/wire_weaver (`docs/`, `examples_mcu/`).
 
+mod clock;
 mod device;
+mod leds;
 
 use cnt::cnt;
 use defmt::{info, unwrap, warn};
 use embassy_executor::Spawner;
 use embassy_futures::select::{Either3, select3};
-use embassy_stm32::gpio::Output;
 use embassy_time::{Instant, Timer};
 use rtt_target::{DownChannel, UpChannel};
 use static_cell::StaticCell;
@@ -34,7 +36,6 @@ const STREAM_BUDGET: usize = 2048;
 
 /// Everything the API implementation needs: peripherals, drivers, state.
 pub struct ServerState {
-    pub led: Output<'static>,
     /// Reset cause and crash record read at boot (src/last_reset.rs)
     last_reset: bedrock_crash::Snapshot,
     /// Settings in flash (src/settings.rs): `device.label`, `device.settings`
@@ -49,6 +50,11 @@ pub struct ServerState {
     stream_sessions: u32,
     /// `pins`: the free pins (src/pins.rs)
     pins: crate::pins::Pins,
+    /// `leds`: mode, brightness and the end of a running identify (src/led.rs shows them)
+    leds: leds::LedsState,
+    /// `clock`: the sync line's configuration (always `Off`) and whether `time_map` is subscribed; the shared clock
+    /// itself is `crate::sync::SYNC`, read by the LED task too
+    clock: clock::ClockState,
 }
 
 /// The chip's unique id, read once
@@ -56,7 +62,6 @@ static UID: StaticCell<[u8; 12]> = StaticCell::new();
 
 impl ServerState {
     pub async fn new(
-        led: Output<'static>,
         last_reset: bedrock_crash::Snapshot,
         settings: crate::settings::SettingsStore,
         pins: crate::pins::Pins,
@@ -65,7 +70,6 @@ impl ServerState {
         // for its own (the boot count restarts at a power-on, the log store is lost with it then)
         let stream_sessions = last_reset.view().boot_count << 16 | 1;
         ServerState {
-            led,
             last_reset,
             settings,
             log_frames: crate::log::stream(stream_sessions).await,
@@ -79,6 +83,8 @@ impl ServerState {
             counters_page: [UVlq32(0); ww_counters::MAX_WORDS],
             stream_sessions,
             pins,
+            leds: leds::LedsState::new(),
+            clock: clock::ClockState::new(),
         }
     }
 
@@ -97,14 +103,14 @@ impl ServerState {
     fn led_on(&mut self, _cx: &mut Context<'_, impl EventOut>) -> RpcResult<()> {
         info!("led on");
         cnt!(led_on_calls: u32);
-        self.led.set_high();
+        crate::led::set(crate::led::Mode::On);
         Ready(())
     }
 
     fn led_off(&mut self, _cx: &mut Context<'_, impl EventOut>) -> RpcResult<()> {
         info!("led off");
         cnt!(led_off_calls: u32);
-        self.led.set_low();
+        crate::led::set(crate::led::Mode::Off);
         Ready(())
     }
 }
@@ -151,9 +157,9 @@ mod server_impl {
     wire_weaver::ww_codegen!(
         nucleo_g0b1re_api :: NucleoG0b1reApi for super::ServerState,
         server = true, no_alloc = true, use_async = true,
-        // handlers that await (flash writes) are async, all others plain `fn`s: an `async fn` that never awaits
-        // still costs flash as a state of the dispatcher
-        handler_model = "device.label.*|device.settings.*=async, _=sync",
+        // handlers that await (flash writes, clock.steer's time_map point) are async, all others plain `fn`s: an
+        // `async fn` that never awaits still costs flash as a state of the dispatcher
+        handler_model = "device.label.*|device.settings.*|clock.steer=async, _=sync",
         method_model = "_=immediate",
         property_model = "_=get_set",
         introspect = "with_docs",

@@ -234,7 +234,8 @@ impl ServerState {
     }
 }
 
-// Values of the API's `const` items, served without a handler and read once per connection by a host.
+// Values of the API's `const` items (device and leds), served without a handler and read once per connection by a
+// host.
 impl super::server_impl::NucleoG0b1reApiConsts for ServerState {
     // name, version, git commit, build time and profile, from build.rs (ww_firmware_info::build::emit())
     const DEVICE_FIRMWARE_FIRMWARE: FirmwareSummary<'static> =
@@ -294,4 +295,7 @@ impl super::server_impl::NucleoG0b1reApiConsts for ServerState {
             slice: crate::pins::POINTS,
         }
     }
+
+    // ww_indication::Indication at leds: its one LED (src/ww/leds.rs)
+    const LEDS_NAMES: RefVec<'static, &'static str> = super::leds::NAMES;
 }

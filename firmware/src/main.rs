@@ -4,16 +4,17 @@
 mod boot;
 mod init;
 mod last_reset;
+mod led;
 mod log;
 mod pins;
 mod settings;
+mod sync;
 mod ww;
 
 use cnt::cnt; // cnt::bkp_cnt! for counters in backup registers
-use defmt::{error, info};
+use defmt::{error, info, unwrap};
 
 use cortex_m_rt::exception;
-use embassy_stm32::gpio::{Level, Output, Speed};
 use embassy_stm32::rcc::{Pll, PllMul, PllPreDiv, PllRDiv, PllSource, Sysclk};
 use embassy_time::Timer;
 
@@ -53,21 +54,21 @@ async fn main(spawner: embassy_executor::Spawner) {
     let settings = settings::SettingsStore::load(p.FLASH).await;
     info!("label: {}", settings.get().label);
 
-    let led_level = if settings.get().led_at_boot {
-        Level::High
+    // LD4 breathes, or shines solid with led_at_boot (src/led.rs)
+    let led_mode = if settings.get().led_at_boot {
+        led::Mode::On
     } else {
-        Level::Low
+        led::DEFAULT_MODE
     };
-    let led = Output::new(p.PA5, led_level, Speed::Low);
+    spawner.spawn(unwrap!(led::led_task(p.TIM2, p.PA5, led_mode)));
     // every free pin, for `pins` (src/pins.rs): take a pin out of its list there to use it here
     let pins = pins::Pins::new(pins::take!(p));
 
-    let state = ww::ServerState::new(led, last_reset, settings, pins).await;
+    let state = ww::ServerState::new(last_reset, settings, pins).await;
     ww::start(spawner, ww_up, ww_down, state);
 
     info!("init done");
     loop {
-        // the LED is switched over WireWeaver, see src/ww.rs
         cnt!(loop_iterations: u32);
         Timer::after_millis(1000).await;
     }

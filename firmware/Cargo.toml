@@ -15,7 +15,7 @@ rtt-target = "0.6" # the RTT channels: the log's tee and WireWeaver's up and dow
 cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7"
 portable-atomic = { version = "1.11", features = ["critical-section"] } # atomics for Cortex-M0(+)
-embassy-stm32 = { version = "0.6.0", features = ["defmt", "stm32g0b1re", "unstable-pac", "exti", "time", "time-driver-any"] }
+embassy-stm32 = { version = "0.6.0", features = ["defmt", "stm32g0b1re", "unstable-pac", "exti", "time", "time-driver-tim4"] } # not "any": it may take TIM2, LD4's PWM (src/led.rs)
 embassy-executor = { version = "0.10.0", features = ["platform-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
 embassy-time = { version = "0.5.1", features = ["defmt", "defmt-timestamp-uptime"] }
 embassy-sync = { version = "0.8.0", features = ["defmt"] }
@@ -27,6 +27,10 @@ bedrock_crash = { git = "https://github.com/romixlab/embedded_bedrock", features
 # firmware updates through the STM32 ROM bootloader (src/boot.rs): the early boot, reboot(Updater), boot-loop rescue,
 # device.boot and device.dfu.node
 bedrock_rom_boot = { git = "https://github.com/romixlab/embedded_bedrock", features = ["stm32g0", "embassy", "ww-dfu", "defmt"] }
+# LD4 breathes, blinks, identifies on TIM2_CH1 PWM (src/led.rs), aligned to shared time; `leds` (src/ww/leds.rs)
+bedrock_led = { git = "https://github.com/romixlab/embedded_bedrock", features = ["embassy", "ww-indication", "defmt"] }
+# the shared clock a host steers onto UTC (src/sync.rs), served as `clock` (src/ww/clock.rs)
+bedrock_sync = { git = "https://github.com/romixlab/embedded_bedrock", features = ["embassy", "ww-timebase", "defmt"] }
 # settings store in the SETTINGS flash region (src/settings.rs)
 ww_settings = { git = "https://github.com/vhrdtech/wire_weaver", features = ["defmt"] }
 # flash reads that survive an ECC error left by a power cut
@@ -44,7 +48,10 @@ embassy-futures = "0.1.2" # select in the server task (src/ww.rs)
 ww_firmware_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["build-id", "cortex-m", "defmt"] }
 # the device contract's stdlib traits (`device` in the API crate): types in the handler signatures (src/ww/device.rs)
 ww_board_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
-ww_si = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["time"] }
+ww_si = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["time", "u32"] }
+ww_indication = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_timebase = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_date_time = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false } # clock.set_time_of_day
 ww_uid = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 ww_counters = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 ww_log = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
