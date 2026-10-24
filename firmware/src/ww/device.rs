@@ -141,7 +141,8 @@ fn variant() -> Variant {
     // SAFETY: the engineering bytes, readable at any time
     let flash_kib = unsafe { FLASH_SIZE.read_volatile() };
     Variant {
-        dev_id: idcode.dev_id(),
+        // DEV_ID is bits 11:0; the PAC's field also takes the reserved 15:12, which read 0x6 on a G0B1
+        dev_id: idcode.dev_id() & 0xFFF,
         rev_id: idcode.rev_id(),
         revision: SiliconRevision::from_rev_id(idcode.rev_id()),
         flash_kib,

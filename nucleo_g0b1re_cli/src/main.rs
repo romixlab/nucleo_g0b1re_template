@@ -17,7 +17,8 @@ use clap_complete::engine::{ArgValueCandidates, ArgValueCompleter, PathCompleter
 use clap_complete::{CompleteEnv, CompletionCandidate};
 use indicatif::{ProgressBar, ProgressStyle};
 use nucleo_g0b1re_client::{
-    BootTarget, CounterBuffer, Error, Nucleo, PROBE_RS_CHIP, Probe, api_line, firmware_line,
+    BootTarget, CounterBuffer, Error, Nucleo, PROBE_RS_CHIP, Probe, api_line, board_line,
+    firmware_line, node_lines, reset_lines,
 };
 
 /// `--version`: `0.1.0 (a1b2c3d-dirty, built 23 Oct 2026 10:20 UTC)`, stamped by `build.rs`.
@@ -264,12 +265,9 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                 Err(Error::Unimplemented { .. }) => {}
                 Err(e) => return Err(e.into()),
             }
-            let b = board.board().await?;
             println!(
-                "{BOLD}board{BOLD:#}      {} rev {}  {DIM}serial {}{DIM:#}",
-                b.name.as_str(),
-                b.revision.as_str(),
-                b.serial.as_str()
+                "{BOLD}board{BOLD:#}      {}",
+                board_line(&board.board().await?)
             );
             let v = board.variant().await?;
             println!("{BOLD}chip{BOLD:#}       {}", variant_line(&v));
@@ -281,7 +279,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
             }
             let boots = board.boot_count().await?;
             let reset = board.last_reset().await?;
-            println!("{BOLD}last reset{BOLD:#} {reset:?}  {DIM}boot #{boots}{DIM:#}");
+            for (i, line) in reset_lines(&reset, boots).iter().enumerate() {
+                let label = if i == 0 { "last reset" } else { "          " };
+                println!("{BOLD}{label}{BOLD:#} {line}");
+            }
             board.disconnect().await;
         }
         Cmd::Led(cmd) => {
@@ -314,7 +315,7 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         }
         Cmd::Board => {
             let board = connect(&cli).await?;
-            println!("{:#?}", board.board().await?);
+            println!("{}", board_line(&board.board().await?));
             board.disconnect().await;
         }
         Cmd::Uid => {
@@ -420,7 +421,9 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         }
         Cmd::Dfu => {
             let board = connect(&cli).await?;
-            println!("{:#?}", board.dfu_node().await?);
+            for line in node_lines(&board.dfu_node().await?) {
+                println!("{line}");
+            }
             board.disconnect().await;
         }
         Cmd::Report { force } => {
@@ -432,8 +435,9 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
             let board = connect(&cli).await?;
             let boots = board.boot_count().await?;
             let reset = board.last_reset().await?;
-            println!("{reset:#?}");
-            println!("{DIM}boots since cleared: {boots}{DIM:#}");
+            for line in reset_lines(&reset, boots) {
+                println!("{line}");
+            }
             if *clear {
                 board.clear_last_reset().await?;
                 println!("{GREEN}cleared{GREEN:#}");

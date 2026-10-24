@@ -204,6 +204,72 @@ pub fn firmware_line(fw: &FirmwareSummaryOwned) -> String {
     )
 }
 
+/// One line for the board: `NUCLEO-G0B1RE rev C02 (Assumed), serial 21002200175036344B333720`.
+pub fn board_line(b: &BoardSummaryOwned) -> String {
+    let mut line = format!(
+        "{} rev {} ({:?})",
+        b.name.as_str(),
+        b.revision.as_str(),
+        b.revision_source
+    );
+    for (label, v) in [("variant", &b.variant), ("BOM", &b.bom_variant)] {
+        if !v.as_str().is_empty() {
+            line.push_str(&format!(", {label} {}", v.as_str()));
+        }
+    }
+    if !b.serial.as_str().is_empty() {
+        line.push_str(&format!(", serial {}", b.serial.as_str()));
+    }
+    line
+}
+
+/// The last reset as lines: `Software, boot 2 since cleared`, then the panic message and the fault registers when
+/// the record has them (`g0b1re report` names the crash's addresses with the ELF).
+pub fn reset_lines(r: &ResetRecordOwned, boots: u32) -> Vec<String> {
+    let mut first = format!("{:?}, boot {boots} since cleared", r.cause);
+    if r.boots_since_crash > 0 {
+        first.push_str(&format!(", crash data {} boots old", r.boots_since_crash));
+    }
+    if let Some(up) = &r.uptime {
+        first.push_str(&format!(", ran {:.1} s", up.to_f64()));
+    }
+    let mut lines = vec![first];
+    if !r.message.as_str().is_empty() {
+        lines.push(format!("message: {}", r.message.as_str()));
+    }
+    match &r.fault {
+        Some(ww_firmware_info::Fault::CortexM(c)) => lines.push(format!(
+            "Cortex-M fault: pc {:#010x} lr {:#010x} sp {:#010x} xpsr {:#010x} cfsr {:#010x} hfsr {:#010x}",
+            c.pc, c.lr, c.sp, c.xpsr, c.cfsr, c.hfsr
+        )),
+        Some(other) => lines.push(format!("{other:?}")),
+        None => {}
+    }
+    lines
+}
+
+/// The update node as `name  value` lines: product, role, profile, boot state, app version, last result.
+pub fn node_lines(n: &NodeInfoOwned) -> Vec<String> {
+    let version = n
+        .app_version
+        .map_or_else(|| "none".to_string(), |v| v.to_string());
+    vec![
+        format!(
+            "product      {} (id {:#010x})",
+            n.product.as_str(),
+            n.product_id
+        ),
+        format!("role         {:?}", n.role),
+        format!("profile      {:?}", n.profile),
+        format!("boot state   {:?}", n.boot_state),
+        format!("app version  {version} (floor {})", n.version_floor),
+        format!(
+            "last result  {:?} (version {})",
+            n.last_result.outcome, n.last_result.version
+        ),
+    ]
+}
+
 /// The API a connected board serves, name and version: `nucleo_g0b1re_api 0.1.0`.
 pub fn api_line(info: &DeviceApiInfo) -> String {
     let v = &info.user_api_version;
