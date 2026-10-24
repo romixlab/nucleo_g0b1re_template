@@ -1259,13 +1259,16 @@ dependencies = [
  "wire_weaver_client",
  "ww_board_info",
  "ww_counters",
+ "ww_date_time",
  "ww_dfu",
  "ww_firmware_info",
  "ww_gpio",
+ "ww_indication",
  "ww_log",
  "ww_pin_diag",
  "ww_report",
  "ww_si",
+ "ww_timebase",
  "ww_uid",
  "ww_user_info",
 ]
@@ -2771,6 +2774,7 @@ name = "ww_date_time"
 version = "0.1.0"
 source = "git+https://github.com/vhrdtech/wire_weaver#ab32916cf27b07b4b0762a998d50e1bf4fd85f0e"
 dependencies = [
+ "chrono",
  "defmt",
  "shrink_wrap",
 ]
