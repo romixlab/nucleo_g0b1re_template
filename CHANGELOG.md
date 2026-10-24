@@ -5,6 +5,35 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The device suite under `device` in the API (the `Device` sub-trait other WireWeaver devices serve): `firmware`,
+  `last_reset`, `board` (NUCLEO-G0B1RE, revision, serial = unique id), `uid` (the 96-bit unique id), `label`,
+  `counters` (the `cnt` counters, RAM and backup registers, with a reset per buffer), `log` (the defmt log kept in RAM
+  across a reset, served by `ww_defmt_logger`; `just run` still shows it live), `variant` (device id, silicon
+  revision and flash size from DBGMCU and the flash size register), `settings` (`led_at_boot`, `reset`), `boot`
+  (boot state, reboot into the firmware or the STM32 ROM bootloader), `dfu.node` (the update node, profile
+  `InPlace`). `led_on` / `led_off` stay.
+- Boot-loop rescue: after four boots in a row that each ended within 10 s the firmware resets into the STM32 ROM
+  bootloader, and the next firmware reports it as `Recovery` in `device.dfu.node`.
+- `g0b1re firmware`, `board`, `uid`, `variant`, `counters [--reset ram|bkp]`, `log [-f]`, `settings show |
+  led-at-boot on|off | reset`, `boot state | reboot [--updater]`, `dfu`, `report` (everything in one text for a bug
+  report); `g0b1re info` shows the board and the chip too. Counters and the log are decoded with the firmware's ELF,
+  found by the build id the board reports; `--elf` names one, `--force` takes it with another build id.
+- `just run` and `just flash` put the ELF they flash into the ELF directory (`cnt elf add`), so `g0b1re` decodes
+  counters and the log from anywhere.
+- Python: `board()`, `uid()`, `variant()`, `counters()`, `reset_counters("ram"|"bkp")`, `log()`, `led_at_boot`,
+  `reset_settings()`, `boot_state()`, `reboot(updater=False)`, `dfu_node()`, `report()`; the example
+  `examples/device.py` (`just py-example device`).
+- README: the Device section, a step per part of the contract, and how a Nucleo reaches the ROM bootloader.
+
+### Changed
+
+- API 0.2.0, a breaking change: `firmware`, `last_reset` and `label` moved under `device`. Hosts built for 0.1 do not
+  talk to this firmware; rebuild them from this API.
+- `g0b1re label` without a name prints `(none)` for an empty label; Python's `last_reset()` is plain lines, like
+  `g0b1re last-reset`.
+
 ### Fixed
 
 - The firmware's cargo runner and every recipe that uses the probe (`just run`, `just cnt`, `just flash`, `just

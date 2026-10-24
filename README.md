@@ -20,16 +20,17 @@ the generator answers; see AGENTS.md).
 | directory | |
 |---|---|
 | `nucleo_g0b1re_api/` | `#![no_std]` API crate: the `NucleoG0b1reApi` trait and its data types, shared by the firmware and every host |
-| `firmware/` | the firmware (embassy, defmt): `src/ww.rs` implements the API, `src/settings.rs` the settings store, `src/last_reset.rs` the crash record |
+| `firmware/` | the firmware (embassy, defmt): `src/ww.rs` and `src/ww/device.rs` implement the API, `src/settings.rs` the settings store, `src/last_reset.rs` the crash record, `src/log.rs` the stored log, `src/boot.rs` the reboots into the ROM bootloader |
 | `nucleo_g0b1re_client/` | Rust client library: typed methods over the generated WireWeaver client |
 | `nucleo_g0b1re_cli/` | `g0b1re`, the command line over the library |
 | `nucleo_g0b1re_py/` | `nucleo_g0b1re`, the Python module over the library (PyO3, maturin) |
 | `scripts/rename.py` | gives the project your own name, `just rename` |
 
-What the firmware has from the start: a WireWeaver API over RTT with the device contract (firmware name, version,
-commit, build id; last reset cause with the crash record of a HardFault or panic; a label stored in flash), a
-settings store in the last 8 KiB of flash with ECC-safe reads, `cnt` event counters in RAM and in backup registers,
-flip-link stack overflow protection, the ES0548 dual-bank prefetch guard. [FEATURES.md](FEATURES.md) lists all of it
+What the firmware has from the start: a WireWeaver API over RTT with the device contract under `device` (firmware
+name, version, commit, build id; board, unique id and chip; last reset cause with the crash record of a HardFault or
+panic; a label and settings stored in flash; the `cnt` event counters in RAM and in backup registers; the defmt log,
+kept in RAM across a reset; reboots into the STM32 ROM bootloader and a boot-loop rescue), a settings store in the
+last 8 KiB of flash with ECC-safe reads, flip-link stack overflow protection, the ES0548 dual-bank prefetch guard. [FEATURES.md](FEATURES.md) lists all of it
 with its status; [CHANGELOG.md](CHANGELOG.md) the changes.
 
 ## The board
@@ -93,7 +94,7 @@ just run                 # build, flash and run the dev firmware with its defmt 
 just cnt                 # same, but through `cnt run`: defmt log plus the event counters as they change
 just flash               # release firmware through the probe
 just install             # build and install the `g0b1re` command line
-g0b1re info              # firmware, build id, label, last reset
+g0b1re info              # API, firmware, build id, board, chip, label, last reset
 g0b1re led blink -n 5
 g0b1re label "bench 1"   # stored in the board's flash
 g0b1re last-reset --clear
@@ -110,11 +111,52 @@ scans the RAM for the RTT control block (about 1.5 s through an ST-LINK); `--elf
 `cargo install --git https://github.com/vhrdtech/wire_weaver wire_weaver_cli`) can introspect and call any API
 without the generated client: `ww --rtt STM32G0B1RETx introspect`.
 
+## Device
+
+Each part of the device contract (`device` in the API, the same traits as other WireWeaver devices) has its own
+`g0b1re` command. Stop `just run` first; `just flash` and `just run` put the firmware's ELF into the ELF directory
+(`cnt elf add`), so `counters`, `log` and `report` find it by the build id the board reports (`--elf FILE` names one,
+`--force` takes it although its build id differs).
+
+```sh
+g0b1re firmware          # name, version, git commit, build time and profile, build id
+g0b1re board             # NUCLEO-G0B1RE rev C02 (Assumed), serial = the chip's unique id
+g0b1re uid               # the 96-bit unique id
+g0b1re variant           # STM32G0B1/G0C1 (0x467) rev A (0x1000), 512 KiB flash: DBGMCU_IDCODE and the flash size register
+g0b1re label "bench 1"   # the label, in flash; `g0b1re label` shows it
+g0b1re last-reset        # reset cause and boot count, the crash record after a HardFault or panic
+g0b1re counters          # every cnt counter, RAM and backup registers
+g0b1re counters --reset ram
+g0b1re log               # the defmt log the board keeps, decoded; the board keeps it as it is
+g0b1re log -f            # then every new line as it is logged, until Ctrl-C
+g0b1re settings show     # led-at-boot
+g0b1re settings led-at-boot on   # LD4 lights at boot (try it: press RESET, B2)
+g0b1re settings reset    # every setting back to its default, the label too
+g0b1re boot state        # Confirmed: the firmware is the only image
+g0b1re boot reboot       # reset into the firmware
+g0b1re dfu               # the update node: product, profile InPlace, boot state, last result
+g0b1re report            # all of the above in one text, for a bug report
+```
+
+The log lives in RAM that a reset keeps, so after a crash `g0b1re log` still shows what led to it. When a host
+reads it, the board may drop what was read already to make room: a `--- N log messages lost (Store) ---` line at the
+start says so, the lines after it are complete.
+
+**The ROM bootloader.** `g0b1re boot reboot --updater` resets the board into the STM32 ROM bootloader, and so does
+the firmware itself after four boots in a row that each ended within 10 s (a boot loop: the next firmware reports
+it as `last result  Recovery` in `g0b1re dfu`). The ROM bootloader's USB DFU is on PA11 / PA12 (USB D- on CN10-14, D+ on CN10-12), which
+a Nucleo-64 brings only to the morpho header CN10, not to a USB connector: to use it, wire a USB cable to those pins
+and GND. ST's AN2606 lists the ROM's other interfaces. The ROM bootloader stays until the next reset (B2, a power
+cycle), which starts the firmware again; the probe reaches the chip whatever runs on it, so `just flash` works from
+the ROM bootloader too. Flashing four times within 10 s of each other counts as a boot loop as well: the fourth boot
+lands in the ROM bootloader, the next reset or flash comes back.
+
 ## Python
 
 ```sh
 just py                  # builds the module into nucleo_g0b1re_py/.venv, opens a prompt with the board as `dev`
 just py-example          # nucleo_g0b1re_py/examples/blink.py
+just py-example device   # nucleo_g0b1re_py/examples/device.py: the device contract
 just test-py
 ```
 
@@ -124,6 +166,13 @@ with nucleo_g0b1re.Device() as dev:         # Device(probe_serial="...", elf="fi
     print(dev.firmware())
     dev.label = "bench 1"
     dev.blink(count=3, period_ms=400)
+    print(dev.board(), dev.variant(), dev.uid())
+    print(dev.last_reset())
+    print(dev.counters())                   # {"RAM/loop_iterations": 139, ...}
+    print("\n".join(dev.log()))
+    dev.led_at_boot = True                  # dev.reset_settings() puts the defaults back
+    print(dev.boot_state(), dev.dfu_node())
+    dev.reboot()                            # reboot(updater=True): into the ROM bootloader; disconnects
 ```
 
 ## Make it yours

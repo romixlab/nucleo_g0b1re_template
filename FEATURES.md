@@ -15,6 +15,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | FW-6 | ES0548 (dual-bank prefetch) guard: flash prefetch on, code kept in bank 1 by a link-time assert | ✅ | `firmware/memory.x` |
 | FW-7 | Clock tree for the Nucleo (HSI 16 MHz by default; PLL to 64 MHz) | 📋 | `TODO` in `firmware/src/main.rs` |
 | FW-8 | User button B1 (PC13) in the API | 📋 | an example of adding a property |
+| FW-9 | The device suite: board, uid, variant (DBGMCU and flash size), counters, the defmt log kept in RAM across a reset (`ww_defmt_logger`, RTT tee for `just run`), settings (`led_at_boot`), boot control and the update node through the STM32 ROM bootloader (`bedrock_rom_boot`), boot-loop rescue | ✅ | `firmware/src/ww/device.rs`, `src/log.rs`, `src/boot.rs`; run on the board 24 Oct 2026, the ROM's USB DFU 🧪 (PA11/PA12 not wired on a Nucleo, the probe reaches it) |
 
 ## API: `nucleo_g0b1re_api`
 
@@ -22,6 +23,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 |---|---|---|---|
 | API-1 | `led_on` / `led_off` | ✅ | |
 | API-2 | Device contract: `FirmwareInfo` (name, version, commit, build time, build id), `LastReset`, `UserInfo` label | ✅ | WireWeaver stdlib traits |
+| API-3 | `device: Device` (the sub-trait of other WireWeaver devices): firmware, last_reset, board, uid, label, counters, log, variant, settings, boot, dfu.node; API 0.2.0 | ✅ | breaking: firmware, last_reset, label moved under `device` |
 
 ## HOST: client library and command line
 
@@ -31,12 +33,14 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | HOST-2 | `g0b1re` command line: `probes`, `info`, `led on|off|blink`, `label`, `last-reset`; colour, `--version` with git SHA and build time | 🧪 | |
 | HOST-3 | Shell completion with live values (probe serials, ELF files) for bash, zsh and fish | 🧪 | `COMPLETE=bash g0b1re` |
 | HOST-4 | Fast attach through the firmware's ELF (`--elf`, `G0B1RE_ELF`) | 🧪 | RTT control block address from the ELF |
+| HOST-5 | Typed client methods and `g0b1re firmware`, `board`, `uid`, `variant`, `counters [--reset]`, `log [-f]`, `settings`, `boot state\|reboot [--updater]`, `dfu`, `report`; counters and log decoded with the ELF found by build id | ✅ | `nucleo_g0b1re_client/src/device.rs`; run on the board |
 
 ## PY: Python module
 
 | ID | Feature | Status | Notes |
 |---|---|---|---|
 | PY-1 | `nucleo_g0b1re.Device`: connect, LED, firmware, label, last reset; context manager | 🧪 | PyO3 + maturin, `just py` |
+| PY-2 | `board()`, `uid()`, `variant()`, `counters()`, `reset_counters()`, `log()`, `led_at_boot`, `reset_settings()`, `boot_state()`, `reboot()`, `dfu_node()`, `report()`; `examples/device.py` | ✅ | run on the board |
 
 ## TPL: template chores
 
