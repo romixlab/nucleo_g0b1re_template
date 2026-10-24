@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-24
+
 ### Added
 
 - API evolution check: `nucleo_g0b1re_api/api_snapshots/` holds the snapshot of the released 0.1.0, and a test of
