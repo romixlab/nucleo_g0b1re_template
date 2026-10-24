@@ -20,8 +20,8 @@ use wire_weaver::prelude::*;
 use wire_weaver::{MessageSink, WireWeaverAsyncApiBackend};
 use ww_device::rtt::{RttBuffers, RttConfig, RttServer, rtt_server};
 use ww_device::{EmbassyClock, LinkConfig, LinkEvent};
-use ww_uid::{UidKind, UidSource, UniqueId};
 use ww_pin_diag::{Level, PinDiagError, PointState};
+use ww_uid::{UidKind, UidSource, UniqueId};
 
 /// Longest WireWeaver message the device accepts and can reply with (reported to the host). The RTT up channel
 /// (`ww_up` in log.rs) must be at least `MAX_MESSAGE_LEN + 5` bytes, better twice that.

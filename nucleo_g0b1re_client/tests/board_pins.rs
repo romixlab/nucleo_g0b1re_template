@@ -9,7 +9,9 @@ const ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
 /// `NAME: CAPS` entries of the firmware's `with_points!` list
 fn firmware_points() -> Vec<(String, String)> {
     let src = std::fs::read_to_string(format!("{ROOT}/firmware/src/pins.rs")).unwrap();
-    let start = src.find("macro_rules! with_points").expect("with_points! in pins.rs");
+    let start = src
+        .find("macro_rules! with_points")
+        .expect("with_points! in pins.rs");
     let list = &src[start..];
     let list = &list[list.find("$($args)*").unwrap() + "$($args)*".len()..];
     let list = &list[..list.find('}').unwrap()];
@@ -43,12 +45,26 @@ fn points_are_the_free_pins() {
     let board = board_pins();
     assert!(board.len() > 50, "pin table not parsed: {board:?}");
 
-    let free: BTreeSet<_> = board.iter().filter(|(_, r)| r == "free").map(|(p, _)| p.clone()).collect();
-    let driven: BTreeSet<_> = points.iter().filter(|(_, c)| c == "FREE").map(|(p, _)| p.clone()).collect();
-    assert_eq!(driven, free, "FREE points of firmware/src/pins.rs vs free pins of the board map");
+    let free: BTreeSet<_> = board
+        .iter()
+        .filter(|(_, r)| r == "free")
+        .map(|(p, _)| p.clone())
+        .collect();
+    let driven: BTreeSet<_> = points
+        .iter()
+        .filter(|(_, c)| c == "FREE")
+        .map(|(p, _)| p.clone())
+        .collect();
+    assert_eq!(
+        driven, free,
+        "FREE points of firmware/src/pins.rs vs free pins of the board map"
+    );
 
     for (pin, caps) in &points {
-        let role = board.iter().find(|(p, _)| p == pin).map(|(_, r)| r.as_str());
+        let role = board
+            .iter()
+            .find(|(p, _)| p == pin)
+            .map(|(_, r)| r.as_str());
         match caps.as_str() {
             "FREE" => {}
             // read only: a pin a part of the board drives or pulls, never the debug port, reset or a crystal
