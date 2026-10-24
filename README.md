@@ -175,12 +175,57 @@ pull, shows up; `docs/board/nucleo_g0b1re-pins-test.toml` holds what a bare boar
 PC11 follows. `ww --rtt STM32G0B1RETx pins test PC10,PC11` reports them shorted to each other; take the jumper off
 and they are not. Press B1 and PC13 reads low.
 
+## LED and clock
+
+LD4 breathes (a 3 s breath, PWM on TIM2_CH1 at 1 kHz, embedded_bedrock's `bedrock_led`). `g0b1re led on|off|blink`
+hold it solid on or off until the next reset; `g0b1re settings led-at-boot on` starts it solid on instead.
+
+```sh
+g0b1re leds show                # mode and brightness
+g0b1re leds mode essential      # hide LD4 (normal shows it, off hides it too); RAM only, normal after a reset
+g0b1re leds brightness low      # lowest, low, normal, high, highest; RAM only
+g0b1re leds identify 10         # blink LD4 at full brightness for 10 s, then back to its mode
+g0b1re clock --watch 60         # wait for the lock, then a line a second against this PC's UTC
+```
+
+The board keeps a shared clock (`clock` in the API, `ww_timebase::Clock`), and the breath follows it: two boards
+whose PCs keep UTC (NTP) breathe in phase. Nothing has to be started for it: whenever a host connects (`g0b1re`,
+Python, `ww`), WireWeaver's clock sync measures the board's clock against the PC and steers it onto UTC
+(`WW_CLOCK_SYNC=off` turns it off). Without a host the board's clock runs on: `Holdover`, then `Free` after an hour.
+
+`g0b1re clock` prints the board's `Locked` / `Acquiring` state, the **residual** (the board's shared time minus the
+PC's UTC, read once in the middle of a round trip, so known only to within half of it), the offset the board still
+slews in, the error bound the host sent with its last steer point and the fit's rate (how far the board's HSI16-based
+clock runs from the PC's):
+
+```text
+Locked (Host), residual -0.70 ms ± 4.28 ms, slew 0 µs, error ≤ 4.55 ms, rate -3435.5 ppm, fit rms 0.53 ms
+```
+
+**How close it is, over RTT.** The host reaches the board by polling RTT through the ST-LINK, so a round trip takes
+milliseconds, and that is the limit. Measured on one Nucleo for 5 minutes (`just py-example clock 300`, a check a
+second, 24 Oct 2026):
+
+| | |
+|---|---|
+| state | `Locked` in all 300 checks |
+| residual | mean −0.23 ms, standard deviation 1.10 ms, largest 3.8 ms |
+| round trip | median 8.2 ms, longest 20.7 ms; each residual is known only to ± half of it |
+| error bound the host sends | 4.2–5.5 ms (half the shortest round trip plus twice the fit's scatter) |
+| board clock rate | −3390 to −3480 ppm against the PC (the HSI16, uncalibrated) |
+
+So the board follows UTC to a few milliseconds; the scatter of the residual is mostly the round trip, not the board.
+Because the error bound is about 4 ms, the firmware locks within 10 ms (`firmware/src/sync.rs`) instead of
+bedrock_sync's 2 ms, which suits a USB board with sub-millisecond round trips. For a breath of 3 s, boards a few
+milliseconds apart look in phase. Two boards side by side were not tried yet.
+
 ## Python
 
 ```sh
 just py                  # builds the module into nucleo_g0b1re_py/.venv, opens a prompt with the board as `dev`
 just py-example          # nucleo_g0b1re_py/examples/blink.py
 just py-example device   # nucleo_g0b1re_py/examples/device.py: the device contract
+just py-example clock 60 # nucleo_g0b1re_py/examples/clock.py: offset and residual of the board's clock for 60 s
 just test-py
 ```
 
@@ -196,6 +241,9 @@ with nucleo_g0b1re.Device() as dev:         # Device(probe_serial="...", elf="fi
     print("\n".join(dev.log()))
     dev.led_at_boot = True                  # dev.reset_settings() puts the defaults back
     print(dev.boot_state(), dev.dfu_node())
+    dev.brightness = "low"                  # dev.leds_mode = "normal" | "essential" | "off"; dev.identify(5)
+    dev.wait_clock_locked(timeout=60)
+    print(dev.clock_check())                # {"state": "Locked", "residual_us": -230.0, "rtt_us": 8204.0, ...}
     dev.reboot()                            # reboot(updater=True): into the ROM bootloader; disconnects
 ```
 

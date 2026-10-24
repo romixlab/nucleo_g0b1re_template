@@ -5,6 +5,24 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- LD4 breathes by default (PWM on TIM2_CH1, embedded_bedrock's `bedrock_led`); `led_on` / `led_off` hold it solid on
+  or off until the next reset, `settings led-at-boot on` starts it solid on.
+- `leds` in the API (`ww_indication::Indication`): mode (normal, essential, off), brightness (lowest to highest),
+  identify (blinks LD4 for a while). `g0b1re leds show | mode | brightness | identify`; Python `leds_mode`,
+  `brightness`, `identify()`.
+- `clock` in the API (`ww_timebase::Clock`): the host steers the board's shared clock onto its UTC by itself when it
+  connects, and the breath follows shared time, so boards on PCs with NTP breathe in phase. `g0b1re clock [--watch N]`
+  waits for the lock and prints the residual against the PC's UTC; Python `wait_clock_locked()`, `clock_check()` and
+  `examples/clock.py` (`just py-example clock`). README "LED and clock" has the residual measured over RTT.
+- `api_snapshots/` has the released API 0.3.0, so the check judges changes against it.
+
+### Changed
+
+- API 0.4.0 (additions only: hosts built for 0.3 keep working).
+- embassy's time driver is TIM4, named explicitly, so TIM2 stays free for LD4's PWM.
+
 ## [0.1.6] - 2026-10-24
 
 ### Added

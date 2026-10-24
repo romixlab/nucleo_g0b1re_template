@@ -16,6 +16,8 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | FW-7 | Clock tree for the Nucleo (HSI 16 MHz by default; PLL to 64 MHz) | 📋 | `TODO` in `firmware/src/main.rs` |
 | FW-8 | User button B1 (PC13) in the API | 📋 | an example of adding a property |
 | FW-9 | The device suite: board, uid, variant (DBGMCU and flash size), counters, the defmt log kept in RAM across a reset (`ww_defmt_logger`, RTT tee for `just run`), settings (`led_at_boot`), boot control and the update node through the STM32 ROM bootloader (`bedrock_rom_boot`), boot-loop rescue | ✅ | `firmware/src/ww/device.rs`, `src/log.rs`, `src/boot.rs`; run on the board 24 Oct 2026, the ROM's USB DFU 🧪 (PA11/PA12 not wired on a Nucleo, the probe reaches it) |
+| FW-10 | LD4 breathes by default: TIM2_CH1 PWM on PA5 at 1 kHz through embedded_bedrock's `bedrock_led`; `led_on` / `led_off` hold it solid; `leds` (mode, brightness, identify); embassy's time driver named explicitly (TIM4) so TIM2 stays free | ✅ | `firmware/src/led.rs`, `src/ww/leds.rs`; run on the board 24 Oct 2026 (TIM2 CCR1 read through the probe; two boards in phase not tried, one board at hand) |
+| FW-11 | Shared clock steered by the host (`clock`, `ww_timebase::Clock` through `bedrock_sync`'s ClockServer, U32 µs); breath and blink aligned to shared time, so boards on PCs with NTP breathe in phase; lock tolerance 10 ms for RTT | ✅ | `firmware/src/sync.rs`, `src/ww/clock.rs`; residual over RTT measured on the board (README "LED and clock") |
 | FW-12 | `pins`: `ww_pin_diag::PinDiag` on the 50 pins the board map marks free, named as there, plus PC13 (B1) read only; analog until a host sets or reads a pin, back to analog on `release_all`, on a disconnect and when the host goes silent; `#[claim(exclusive)]` | ✅ | `firmware/src/pins.rs`; on the board: `ww pins test` passes on every free pin (pulls, drive high and low read back, no shorts), the release after a killed host seen in GPIOC's MODER; the list is checked against the pin table by `nucleo_g0b1re_client/tests/board_pins.rs` |
 
 ## API: `nucleo_g0b1re_api`
@@ -25,6 +27,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | API-1 | `led_on` / `led_off` | ✅ | |
 | API-2 | Device contract: `FirmwareInfo` (name, version, commit, build time, build id), `LastReset`, `UserInfo` label | ✅ | WireWeaver stdlib traits |
 | API-3 | `device: Device` (the sub-trait of other WireWeaver devices): firmware, last_reset, board, uid, label, counters, log, variant, settings, boot, dfu.node; API 0.2.0 | ✅ | breaking: firmware, last_reset, label moved under `device` |
+| API-4 | `leds: ww_indication::Indication` (mode, brightness, identify) and `clock: ww_timebase::Clock`; `led_on` / `led_off` are solid on / off; API 0.4.0 | ✅ | additions, `#[since = "0.4.0"]` |
 
 ## HOST: client library and command line
 
@@ -35,6 +38,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | HOST-3 | Shell completion with live values (probe serials, ELF files) for bash, zsh and fish | 🧪 | `COMPLETE=bash g0b1re` |
 | HOST-4 | Fast attach through the firmware's ELF (`--elf`, `G0B1RE_ELF`) | 🧪 | RTT control block address from the ELF |
 | HOST-5 | Typed client methods and `g0b1re firmware`, `board`, `uid`, `variant`, `counters [--reset]`, `log [-f]`, `settings`, `boot state\|reboot [--updater]`, `dfu`, `report`; counters and log decoded with the ELF found by build id | ✅ | `nucleo_g0b1re_client/src/device.rs`; run on the board |
+| HOST-6 | `g0b1re leds show\|mode\|brightness\|identify` and `g0b1re clock [--watch N] [--timeout S]`: waits for the lock, prints the residual (shared time minus UTC), the round trip it is known to, slew, error bound and the fit's rate; client `leds_mode`, `brightness`, `identify`, `clock_steering`, `wait_clock_locked`, `clock_check` | ✅ | `nucleo_g0b1re_client/src/sync.rs`; the connection steers the clock by itself (WireWeaver's clock sync, `WW_CLOCK_SYNC=off`); run on the board |
 
 ## PY: Python module
 
@@ -42,6 +46,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 |---|---|---|---|
 | PY-1 | `nucleo_g0b1re.Device`: connect, LED, firmware, label, last reset; context manager | 🧪 | PyO3 + maturin, `just py` |
 | PY-2 | `board()`, `uid()`, `variant()`, `counters()`, `reset_counters()`, `log()`, `led_at_boot`, `reset_settings()`, `boot_state()`, `reboot()`, `dfu_node()`, `report()`; `examples/device.py` | ✅ | run on the board |
+| PY-3 | `leds_mode`, `brightness`, `identify()`, `wait_clock_locked()`, `clock_check()` (a dict: state, residual, round trip, slew, error bound, rate); `examples/clock.py` prints offset and residual and their statistics | ✅ | run on the board |
 
 ## TPL: template chores
 
