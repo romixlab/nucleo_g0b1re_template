@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The firmware's cargo runner and every recipe that uses the probe (`just run`, `just cnt`, `just flash`, `just
+  attach`) take only the Nucleo-64's own ST-LINK/V2-1 (`--probe 0483:374b`), never another probe on the PC: with
+  only someone else's probe attached, `cargo run` flashed this firmware onto that board. With two Nucleos,
+  `G0B1RE_PROBE=SERIAL` (in the environment or in `.env`) picks one.
+
 ## [0.1.4] - 2026-10-24
 
 ### Added
@@ -26,13 +33,6 @@ All notable changes to this project are documented here. The format follows
   installer scripts it fetches and runs; steps that need root are printed, `--root` runs them; `just setup --check`
   reports what is missing, also as a CI job. On Windows `just`
   runs the recipes with cmd, so Git's sh need not be on PATH, and `just install` uses cargo install.
-
-### Fixed
-
-- The firmware's cargo runner and every recipe that uses the probe (`just run`, `just cnt`, `just flash`, `just
-  attach`) take only the Nucleo-64's own ST-LINK/V2-1 (`--probe 0483:374b`), never another probe on the PC: with
-  only someone else's probe attached, `cargo run` flashed this firmware onto that board. With two Nucleos,
-  `G0B1RE_PROBE=SERIAL` (in the environment or in `.env`) picks one.
 
 ## [0.1.2] - 2026-10-23
 
