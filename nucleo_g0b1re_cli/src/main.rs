@@ -17,8 +17,8 @@ use clap_complete::engine::{ArgValueCandidates, ArgValueCompleter, PathCompleter
 use clap_complete::{CompleteEnv, CompletionCandidate};
 use indicatif::{ProgressBar, ProgressStyle};
 use nucleo_g0b1re_client::{
-    BootTarget, CounterBuffer, Error, Nucleo, PROBE_RS_CHIP, Probe, api_line, board_line,
-    firmware_line, node_lines, reset_lines,
+    BootTarget, Brightness, CounterBuffer, Error, Mode, Nucleo, PROBE_RS_CHIP, Probe, api_line,
+    board_line, clock_line, firmware_line, node_lines, reset_lines,
 };
 
 /// `--version`: `0.1.0 (a1b2c3d-dirty, built 23 Oct 2026 10:20 UTC)`, stamped by `build.rs`.
@@ -112,9 +112,22 @@ enum Cmd {
         #[arg(long)]
         force: bool,
     },
-    /// The user LED (LD4)
+    /// The user LED (LD4): solid on, off, blinked from the PC
     #[command(subcommand)]
     Led(LedCmd),
+    /// LD4's indication: mode, brightness, identify (LD4 breathes by default)
+    #[command(subcommand)]
+    Leds(LedsCmd),
+    /// The board's clock against this PC's UTC: the connection steers it, this waits for the lock and prints the
+    /// residual (the board's shared time minus UTC) and the round trip it is known to
+    Clock {
+        /// Keep checking every second for this many seconds
+        #[arg(short, long, value_name = "SECONDS", default_value_t = 0)]
+        watch: u64,
+        /// Give up waiting for the lock after this many seconds
+        #[arg(long, value_name = "SECONDS", default_value_t = 30)]
+        timeout: u64,
+    },
     /// Show the board's label, or store a new one (kept in the board's flash)
     Label {
         /// The new label, at most 32 bytes
@@ -180,6 +193,38 @@ enum LedCmd {
         #[arg(long, default_value_t = 500, value_name = "MS")]
         period: u64,
     },
+}
+
+#[derive(Subcommand)]
+enum LedsCmd {
+    /// Show mode and brightness
+    Show,
+    /// Global mode: normal shows LD4, essential and off hide it
+    Mode { mode: LedsMode },
+    /// Peak brightness
+    Brightness { level: Level },
+    /// Blink LD4 at full brightness to find the board, then back to its mode
+    Identify {
+        /// How long, in seconds
+        #[arg(default_value_t = 5)]
+        seconds: u32,
+    },
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum LedsMode {
+    Normal,
+    Essential,
+    Off,
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum Level {
+    Lowest,
+    Low,
+    Normal,
+    High,
+    Highest,
 }
 
 /// Serials of the attached probes for `--probe`, the probe's name as help; empty on any error.
@@ -293,6 +338,63 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
                 LedCmd::Blink { count, period } => {
                     board.blink(*count, Duration::from_millis(*period)).await?
                 }
+            }
+            board.disconnect().await;
+        }
+        Cmd::Leds(cmd) => {
+            let board = connect(&cli).await?;
+            match cmd {
+                LedsCmd::Show => {
+                    println!("mode        {:?}", board.leds_mode().await?);
+                    println!("brightness  {:?}", board.brightness().await?);
+                }
+                LedsCmd::Mode { mode } => {
+                    let mode = match mode {
+                        LedsMode::Normal => Mode::Normal,
+                        LedsMode::Essential => Mode::OnlyEssential,
+                        LedsMode::Off => Mode::AllOff,
+                    };
+                    board.set_leds_mode(mode).await?;
+                }
+                LedsCmd::Brightness { level } => {
+                    let level = match level {
+                        Level::Lowest => Brightness::Lowest,
+                        Level::Low => Brightness::Low,
+                        Level::Normal => Brightness::Normal,
+                        Level::High => Brightness::High,
+                        Level::Highest => Brightness::Highest,
+                    };
+                    board.set_brightness(level).await?;
+                }
+                LedsCmd::Identify { seconds } => {
+                    board
+                        .identify(Duration::from_secs(u64::from(*seconds)))
+                        .await?
+                }
+            }
+            board.disconnect().await;
+        }
+        Cmd::Clock { watch, timeout } => {
+            let board = connect(&cli).await?;
+            let spinner = std::io::stderr().is_terminal().then(|| {
+                let s = ProgressBar::new_spinner().with_message("waiting for the clock to lock");
+                s.set_style(ProgressStyle::with_template("{spinner} {msg}").expect("template"));
+                s.enable_steady_tick(Duration::from_millis(80));
+                s
+            });
+            let locked = board.wait_clock_locked(Duration::from_secs(*timeout)).await;
+            if let Some(s) = spinner {
+                s.finish_and_clear();
+            }
+            locked?;
+            let steering = board.clock_steering();
+            for i in 0..=*watch {
+                if i > 0 {
+                    tokio::time::sleep(Duration::from_secs(1)).await;
+                }
+                let check = board.clock_check().await?;
+                let status = steering.as_ref().map(|s| s.status());
+                println!("{}", clock_line(&check, status.as_ref()));
             }
             board.disconnect().await;
         }

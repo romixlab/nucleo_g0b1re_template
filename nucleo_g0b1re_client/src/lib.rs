@@ -15,11 +15,15 @@
 //! Adding to the API: declare the item in `nucleo_g0b1re_api/src/lib.rs`, implement it in `firmware/src/ww.rs`,
 //! then add a method to [Nucleo] that calls the generated client ([Nucleo::raw]: `raw.led_on().call()`,
 //! `raw.device().label().read_name()`, ...) through [call], [call_fallible], [read] or [write], so the CLI and
-//! Python get it with the same errors. The device contract (`device`) is in `device.rs`.
+//! Python get it with the same errors. The device contract (`device`) is in `device.rs`, `leds` and `clock` in
+//! `sync.rs`.
 
 mod device;
+mod sync;
 
 pub use device::*;
+pub use sync::*;
+pub use wire_weaver_client::clock_sync::{Phase as ClockPhase, Status as ClockStatus};
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -367,17 +371,17 @@ impl Nucleo {
         self.raw.cmd.info()
     }
 
-    /// Switches the user LED (LD4, PA5) on.
+    /// The user LED (LD4, PA5) solid on, until another mode (it breathes after boot).
     pub async fn led_on(&self) -> Result<()> {
         call("NucleoG0b1reApi::led_on", self.raw.led_on()).await
     }
 
-    /// Switches the user LED off.
+    /// The user LED off, until another mode.
     pub async fn led_off(&self) -> Result<()> {
         call("NucleoG0b1reApi::led_off", self.raw.led_off()).await
     }
 
-    /// Blinks the LED `count` times, `period` per on-off cycle; the LED is off afterwards.
+    /// Blinks the LED `count` times, `period` per on-off cycle, from the host; the LED is off afterwards.
     pub async fn blink(&self, count: u32, period: Duration) -> Result<()> {
         for _ in 0..count {
             self.led_on().await?;
