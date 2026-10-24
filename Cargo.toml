@@ -29,6 +29,9 @@ ww_counters = { git = "https://github.com/vhrdtech/wire_weaver", features = ["st
 ww_dfu = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
 ww_uid = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
 ww_log = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
+ww_indication = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
+ww_timebase = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
+ww_date_time = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std"] }
 ww_si = { git = "https://github.com/vhrdtech/wire_weaver", features = ["std", "time"] }
 # counters, the stored log and the bug report decoded with the firmware's ELF, as `ww report` does
 ww_report = { git = "https://github.com/vhrdtech/wire_weaver" }

@@ -1,6 +1,6 @@
 [package]
 name = "nucleo_g0b1re_api"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 description = "WireWeaver API of the nucleo_g0b1re firmware"
 
@@ -12,12 +12,22 @@ std = [
     "ww_counters/std",
     "ww_dfu/std",
     "ww_firmware_info/std",
+    "ww_indication/std",
     "ww_log/std",
     "ww_pin_diag/std",
+    "ww_timebase/std",
     "ww_uid/std",
     "ww_user_info/std",
 ]
-defmt = ["wire_weaver/defmt", "ww_firmware_info/defmt", "ww_user_info/defmt", "ww_pin_diag/defmt", "dep:defmt"]
+defmt = [
+    "wire_weaver/defmt",
+    "ww_firmware_info/defmt",
+    "ww_indication/defmt",
+    "ww_pin_diag/defmt",
+    "ww_timebase/defmt",
+    "ww_user_info/defmt",
+    "dep:defmt",
+]
 
 [dependencies]
 defmt = { version = "1.1", optional = true }
@@ -34,6 +44,9 @@ ww_log = { git = "https://github.com/vhrdtech/wire_weaver", default-features = f
 ww_dfu = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 # PinDiag: raw access to the free pins for pin tests (`ww pins tui`)
 ww_pin_diag = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+# `leds` and `clock`: LD4's indication, the clock a host steers onto UTC
+ww_indication = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_timebase = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 
 [dev-dependencies]
 # the evolution check (tests/evolution.rs): this crate compared with its snapshots in api_snapshots/

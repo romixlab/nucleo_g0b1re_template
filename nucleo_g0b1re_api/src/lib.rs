@@ -10,6 +10,10 @@
 //! (`ww info`, `ww counters`, `ww log`, `ww dfu`) find it there.
 //!
 //! 0.3 adds `pins` (`ww_pin_diag::PinDiag`): the board's free pins for pin tests (`ww pins`).
+//!
+//! 0.4 adds `leds` (`ww_indication::Indication`: mode, brightness, identify; LD4 breathes by default) and `clock`
+//! (`ww_timebase::Clock` with the `host_sync` group: a host steers the board onto UTC, so two boards breathe in
+//! phase). `led_on` / `led_off` stay: LD4 solid on, off.
 #![no_std]
 
 use wire_weaver::prelude::*;
@@ -17,9 +21,9 @@ use wire_weaver::prelude::*;
 /// nucleo_g0b1re device
 #[ww_api_root]
 pub trait NucleoG0b1reApi {
-    /// Turn the LED on
+    /// LD4 solid on (`leds` shows it until another mode)
     fn led_on();
-    /// Turn the LED off
+    /// LD4 off (`leds` shows it until another mode)
     fn led_off();
 
     /// Device contract: firmware, last reset, board, ids, label, counters, log, variant, settings, boot, update node
@@ -30,6 +34,15 @@ pub trait NucleoG0b1reApi {
     /// (`ww pins tui`): one program at a time, every pin given back when it lets go or disconnects
     #[since = "0.3.0"]
     ww_impl!(pins: ww_pin_diag::PinDiag);
+
+    /// LD4 as one indication: global mode, brightness, identify. It breathes by default, in phase with other boards
+    /// once `clock` is steered.
+    #[since = "0.4.0"]
+    ww_impl!(leds: ww_indication::Indication);
+    /// Device clock: local time (U32 µs, wraps every 71.6 minutes), a host's steer points onto UTC (`host_sync`).
+    /// No sync line.
+    #[since = "0.4.0"]
+    ww_impl!(clock: ww_timebase::Clock);
 }
 
 /// The device contract: what every WireWeaver device answers, so generic host tools (`ww info`, `ww log`) work.
