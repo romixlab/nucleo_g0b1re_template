@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-24
+
 ### Added
 
 - `just setup` (`scripts/setup.py`, run with uv): sets up a fresh Arch, Ubuntu or Windows PC for the project (rustup
