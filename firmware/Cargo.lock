@@ -42,6 +42,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "840ad5d907de7448d88a3f22b4a7b5d326c6eb3deeb9f94cfaaec7354a80b305"
 
 [[package]]
+name = "atomic-waker"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
+dependencies = [
+ "portable-atomic",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -59,11 +68,25 @@ dependencies = [
 [[package]]
 name = "bedrock_crash"
 version = "0.1.0"
-source = "git+https://github.com/romixlab/embedded_bedrock#a4723d52d0b3f942f5a5aa5586c136c15dca1f49"
+source = "git+https://github.com/romixlab/embedded_bedrock#63f5fec5df74c69a46d3d9aab21f7e37531d81c9"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "defmt 1.2.0",
+]
+
+[[package]]
+name = "bedrock_rom_boot"
+version = "0.1.0"
+source = "git+https://github.com/romixlab/embedded_bedrock#63f5fec5df74c69a46d3d9aab21f7e37531d81c9"
+dependencies = [
+ "cortex-m",
+ "defmt 1.2.0",
+ "embassy-futures",
+ "embassy-sync",
+ "embassy-time",
+ "wire_weaver",
+ "ww_dfu",
 ]
 
 [[package]]
@@ -968,6 +991,7 @@ version = "0.1.0"
 dependencies = [
  "assign-resources",
  "bedrock_crash",
+ "bedrock_rom_boot",
  "cnt",
  "cortex-m",
  "cortex-m-rt",
@@ -982,22 +1006,35 @@ dependencies = [
  "rtt-target",
  "static_cell",
  "wire_weaver",
+ "ww_board_info",
  "ww_client_server",
+ "ww_counters",
+ "ww_defmt_logger",
  "ww_device",
+ "ww_dfu",
  "ww_ecc_flash",
  "ww_error",
  "ww_firmware_info",
+ "ww_log",
  "ww_settings",
+ "ww_si",
+ "ww_stream",
+ "ww_uid",
  "ww_user_info",
 ]
 
 [[package]]
 name = "nucleo_g0b1re_api"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "defmt 1.2.0",
  "wire_weaver",
+ "ww_board_info",
+ "ww_counters",
+ "ww_dfu",
  "ww_firmware_info",
+ "ww_log",
+ "ww_uid",
  "ww_user_info",
 ]
 
@@ -1189,7 +1226,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7afed1f4302eeba88c601636cf2c554c45e1cbb464bab44c6012bab0e71473c"
 dependencies = [
  "critical-section",
- "defmt 0.3.101",
  "portable-atomic",
  "ufmt-write",
 ]
@@ -1816,6 +1852,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ww_board_info"
+version = "0.3.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "wire_weaver",
+ "ww_date_time",
+]
+
+[[package]]
 name = "ww_client_server"
 version = "0.2.0"
 source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
@@ -1826,12 +1871,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "ww_counters"
+version = "0.1.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "wire_weaver",
+ "ww_error",
+ "ww_si",
+]
+
+[[package]]
 name = "ww_date_time"
 version = "0.1.0"
 source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
 dependencies = [
  "defmt 1.2.0",
  "shrink_wrap",
+]
+
+[[package]]
+name = "ww_defmt_logger"
+version = "0.5.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "critical-section",
+ "defmt 1.2.0",
+ "rtt-target",
+ "wire_weaver",
+ "ww_log",
+ "ww_stream",
 ]
 
 [[package]]
@@ -1849,6 +1917,15 @@ dependencies = [
  "ww_framer",
  "ww_link",
  "ww_tap",
+]
+
+[[package]]
+name = "ww_dfu"
+version = "0.1.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "defmt 1.2.0",
+ "wire_weaver",
 ]
 
 [[package]]
@@ -1918,6 +1995,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ww_log"
+version = "0.1.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "wire_weaver",
+]
+
+[[package]]
 name = "ww_numeric"
 version = "0.2.0"
 source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
@@ -1973,7 +2058,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "ww_stream"
+version = "0.5.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "atomic-waker",
+ "crc",
+ "portable-atomic",
+ "wire_weaver",
+ "ww_client_server",
+ "ww_si",
+]
+
+[[package]]
 name = "ww_tap"
+version = "0.1.0"
+source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
+dependencies = [
+ "wire_weaver",
+]
+
+[[package]]
+name = "ww_uid"
 version = "0.1.0"
 source = "git+https://github.com/vhrdtech/wire_weaver#059c3f8938c97e027ce0cb45ddd515fce4ef68c3"
 dependencies = [

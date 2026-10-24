@@ -1,14 +1,15 @@
 #![no_std]
 #![no_main]
 
+mod boot;
 mod init;
 mod last_reset;
+mod log;
 mod settings;
 mod ww;
 
 use cnt::cnt; // cnt::bkp_cnt! for counters in backup registers
 use defmt::{error, info};
-use rtt_target::{ChannelMode::NoBlockSkip, rtt_init};
 
 use cortex_m_rt::exception;
 use embassy_stm32::gpio::{Level, Output, Speed};
@@ -17,31 +18,12 @@ use embassy_time::Timer;
 
 #[embassy_executor::main]
 async fn main(spawner: embassy_executor::Spawner) {
-    // RTT channels: log output, WireWeaver up (device -> host) and down (host -> device).
-    // The WireWeaver up channel must hold a whole message + framing, see ww::MAX_MESSAGE_LEN.
-    let channels = rtt_init! {
-        up: {
-            0: {
-                size: 1024,
-                mode: NoBlockSkip,
-                name: "defmt"
-            }
-            1: {
-                size: 2048,
-                mode: NoBlockSkip,
-                name: "ww_up"
-            }
-        }
-        down: {
-            0: {
-                size: 2048,
-                mode: NoBlockSkip,
-                name: "ww_down"
-            }
-        }
-    };
-    rtt_target::set_defmt_channel(channels.up.0);
+    // First: may reset once (after the ROM bootloader's jump) or jump into the ROM bootloader (src/boot.rs)
+    let early = boot::early();
+    // RTT channels: the log's tee, WireWeaver up and down (src/log.rs)
+    let (ww_up, ww_down) = log::init_rtt();
     info!("nucleo_g0b1re starting...");
+    boot::log(&early);
     let last_reset = last_reset::boot(); // reset cause and crash record (src/last_reset.rs), logged
     let mut config = embassy_stm32::Config::default();
     // Clock tree: the Nucleo-G0B1RE has no HSE crystal fitted (X3 is open; the ST-LINK's MCO is routed to PF0 but
@@ -65,18 +47,20 @@ async fn main(spawner: embassy_executor::Spawner) {
         .acr()
         .modify(|w| w.set_prften(true));
     init::init();
+    boot::after_init(spawner, &early); // the boot word again, the rescue after a boot loop, the reboot task
 
     let settings = settings::SettingsStore::load(p.FLASH).await;
     info!("label: {}", settings.get().label);
 
-    let led = Output::new(p.PA5, Level::Low, Speed::Low);
-
-    let state = ww::ServerState {
-        led,
-        last_reset,
-        settings,
+    let led_level = if settings.get().led_at_boot {
+        Level::High
+    } else {
+        Level::Low
     };
-    ww::start(spawner, channels.up.1, channels.down.0, state);
+    let led = Output::new(p.PA5, led_level, Speed::Low);
+
+    let state = ww::ServerState::new(led, last_reset, settings).await;
+    ww::start(spawner, ww_up, ww_down, state);
 
     info!("init done");
     loop {

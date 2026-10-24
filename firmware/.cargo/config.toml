@@ -12,7 +12,7 @@ target = "thumbv6m-none-eabi"
 [env]
 DEFMT_LOG = "debug,nucleo_g0b1re=debug"
 CNT_RAM_BUFFER_SIZE_WORDS = "64"
-CNT_BKP_BUFFER_SIZE_WORDS = "5" # must fit into BKPSRAM in memory.x
+CNT_BKP_BUFFER_SIZE_WORDS = "4" # must fit into BKPSRAM in memory.x (the fifth register is the boot word, src/boot.rs)
 
 # [unstable]
 # build-std = ["core"]                              # smaller binaries (nightly + rust-src)

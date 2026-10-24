@@ -8,7 +8,10 @@ edition = "2024"
 
 [dependencies]
 defmt = "1.1"
-rtt-target = { version = "0.6", features = ["defmt"] } # defmt shares RTT with WireWeaver, instead of defmt-rtt
+# defmt's global logger: every frame into device.log over WireWeaver, teed to the RTT channel "defmt" that probe-rs /
+# cnt run show (src/log.rs)
+ww_defmt_logger = { git = "https://github.com/vhrdtech/wire_weaver", features = ["rtt"] }
+rtt-target = "0.6" # the RTT channels: the log's tee and WireWeaver's up and down (src/log.rs)
 cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
 cortex-m-rt = "0.7"
 portable-atomic = { version = "1.11", features = ["critical-section"] } # atomics for Cortex-M0(+)
@@ -18,9 +21,12 @@ embassy-time = { version = "0.5.1", features = ["defmt", "defmt-timestamp-uptime
 embassy-sync = { version = "0.8.0", features = ["defmt"] }
 static_cell = "2.1"
 assign-resources = "0.5.0"
-cnt = "0.5"
+cnt = "0.5" # 0.5: used words and format version, served as device.counters (ww_counters)
 # crash capture: HardFault / panic record kept across reset, reset cause (src/last_reset.rs); the panic handler
 bedrock_crash = { git = "https://github.com/romixlab/embedded_bedrock", features = ["cortex-m", "defmt"] }
+# firmware updates through the STM32 ROM bootloader (src/boot.rs): the early boot, reboot(Updater), boot-loop rescue,
+# device.boot and device.dfu.node
+bedrock_rom_boot = { git = "https://github.com/romixlab/embedded_bedrock", features = ["stm32g0", "embassy", "ww-dfu", "defmt"] }
 # settings store in the SETTINGS flash region (src/settings.rs)
 ww_settings = { git = "https://github.com/vhrdtech/wire_weaver", features = ["defmt"] }
 # flash reads that survive an ECC error left by a power cut
@@ -33,6 +39,15 @@ wire_weaver = { git = "https://github.com/vhrdtech/wire_weaver", default-feature
 ww_client_server = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 embassy-futures = "0.1.2" # select in the server task (src/ww.rs)
 ww_firmware_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["build-id", "cortex-m", "defmt"] }
+# the device contract's stdlib traits (`device` in the API crate): types in the handler signatures (src/ww/device.rs)
+ww_board_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_si = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["time"] }
+ww_uid = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_counters = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_log = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+ww_dfu = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["defmt"] }
+# reliable stream state of device.log; persistent-ram: its store in .uninit RAM, kept across a crash and reset
+ww_stream = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["persistent-ram"] }
 ww_device = { git = "https://github.com/vhrdtech/wire_weaver", features = ["rtt", "embassy-time", "defmt"] }
 
 [build-dependencies]

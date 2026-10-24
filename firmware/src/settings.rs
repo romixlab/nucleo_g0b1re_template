@@ -34,6 +34,9 @@ pub struct DeviceSettings {
     /// Name the user gives this unit, served as `label` (`ww_user_info::UserInfo`)
     #[setting(slot = 0, default = ArrayString::new())]
     pub label: ArrayString<32>,
+    /// The LED after boot, served as `device.settings.led_at_boot`
+    #[setting(slot = 1, default = false)]
+    pub led_at_boot: bool,
 }
 
 /// embassy-stm32's flash, read through `EccSafeFlash` (a word with an ECC error reads as zeros)
@@ -87,6 +90,12 @@ impl SettingsStore {
     /// Changes the settings in RAM; written by [Self::persist_if_due] once they settle. `false`: nothing changed.
     pub fn set(&mut self, f: impl FnOnce(&mut DeviceSettings)) -> bool {
         self.settings.set(now_ms(), f)
+    }
+
+    /// Every setting back to its default in RAM; written by [Self::persist_if_due] once they settle, or by
+    /// [Self::persist].
+    pub fn reset_to_defaults(&mut self) {
+        self.settings.reset_to_defaults(now_ms());
     }
 
     /// Writes the settings now (if they differ from what is stored): `Ok` means they survive a power cut.
