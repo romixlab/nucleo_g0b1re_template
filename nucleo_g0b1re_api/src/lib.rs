@@ -8,6 +8,8 @@
 //! 0.2 puts the device contract under `device` (`Device`, the same tree as Donguru and B135): firmware, last reset,
 //! board, unique id, label, counters, log, variant, settings, boot control and the update node. Generic host tools
 //! (`ww info`, `ww counters`, `ww log`, `ww dfu`) find it there.
+//!
+//! 0.3 adds `pins` (`ww_pin_diag::PinDiag`): the board's free pins for pin tests (`ww pins`).
 #![no_std]
 
 use wire_weaver::prelude::*;
@@ -23,6 +25,11 @@ pub trait NucleoG0b1reApi {
     /// Device contract: firmware, last reset, board, ids, label, counters, log, variant, settings, boot, update node
     #[since = "0.2.0"]
     ww_impl!(device: Device);
+
+    /// Raw access to the pins the board leaves free (docs/board/nucleo_g0b1re-pins.md), for bring-up and pin tests
+    /// (`ww pins tui`): one program at a time, every pin given back when it lets go or disconnects
+    #[since = "0.3.0"]
+    ww_impl!(pins: ww_pin_diag::PinDiag);
 }
 
 /// The device contract: what every WireWeaver device answers, so generic host tools (`ww info`, `ww log`) work.

@@ -13,6 +13,7 @@ use ww_dfu::{BootState, BootTarget, Error as DfuError, NodeInfo};
 use ww_error::CommonError;
 use ww_firmware_info::{BUILD_ID_MAX_LEN, FirmwareSummary, ResetRecord};
 use ww_log::{DefmtInfo, LogError};
+use ww_pin_diag::Point;
 use ww_settings::shrink_wrap::ArrayString;
 use ww_uid::UniqueId;
 use ww_user_info::{MAX_NAME_LEN, UserInfoCaps, UserInfoError};
@@ -284,6 +285,13 @@ impl super::server_impl::NucleoG0b1reApiConsts for ServerState {
         DefmtInfo {
             encoding: crate::log::encoding(),
             build_id: MaxLen::new_unchecked(RefVec::new_bytes(ww_firmware_info::build_id())),
+        }
+    }
+
+    // `pins` (beside the device contract, ww.rs): the free pins, from the table in src/pins.rs
+    fn pins_points(&self) -> RefVec<'_, Point<'_>> {
+        RefVec::Slice {
+            slice: crate::pins::POINTS,
         }
     }
 }

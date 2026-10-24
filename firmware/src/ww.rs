@@ -9,7 +9,7 @@
 mod device;
 
 use cnt::cnt;
-use defmt::{info, unwrap};
+use defmt::{info, unwrap, warn};
 use embassy_executor::Spawner;
 use embassy_futures::select::{Either3, select3};
 use embassy_stm32::gpio::Output;
@@ -21,6 +21,7 @@ use wire_weaver::{MessageSink, WireWeaverAsyncApiBackend};
 use ww_device::rtt::{RttBuffers, RttConfig, RttServer, rtt_server};
 use ww_device::{EmbassyClock, LinkConfig, LinkEvent};
 use ww_uid::{UidKind, UidSource, UniqueId};
+use ww_pin_diag::{Level, PinDiagError, PointState};
 
 /// Longest WireWeaver message the device accepts and can reply with (reported to the host). The RTT up channel
 /// (`ww_up` in log.rs) must be at least `MAX_MESSAGE_LEN + 5` bytes, better twice that.
@@ -46,6 +47,8 @@ pub struct ServerState {
     counters_page: [UVlq32; ww_counters::MAX_WORDS],
     /// Sessions of reliable streams opened so far, see [Self::new_stream_session]
     stream_sessions: u32,
+    /// `pins`: the free pins (src/pins.rs)
+    pins: crate::pins::Pins,
 }
 
 /// The chip's unique id, read once
@@ -56,6 +59,7 @@ impl ServerState {
         led: Output<'static>,
         last_reset: bedrock_crash::Snapshot,
         settings: crate::settings::SettingsStore,
+        pins: crate::pins::Pins,
     ) -> Self {
         // the boot count in the high half: a session of this boot never takes a host's cursor of an earlier boot
         // for its own (the boot count restarts at a power-on, the log store is lost with it then)
@@ -74,6 +78,7 @@ impl ServerState {
             }],
             counters_page: [UVlq32(0); ww_counters::MAX_WORDS],
             stream_sessions,
+            pins,
         }
     }
 
@@ -104,6 +109,42 @@ impl ServerState {
     }
 }
 
+// ww_pin_diag::PinDiag (`pins`): raw access to the free pins (src/pins.rs). A refusal is counted and logged.
+impl ServerState {
+    fn pins_set(
+        &mut self,
+        _cx: &mut Context<'_, impl EventOut>,
+        point: u16,
+        state: PointState,
+    ) -> RpcResult<Result<(), PinDiagError<'_>>> {
+        Ready(
+            self.pins
+                .set(point, state)
+                .inspect_err(|e| refused(point, e)),
+        )
+    }
+
+    fn pins_read(
+        &mut self,
+        _cx: &mut Context<'_, impl EventOut>,
+        point: u16,
+    ) -> RpcResult<Result<Level, PinDiagError<'_>>> {
+        Ready(self.pins.read(point).inspect_err(|e| refused(point, e)))
+    }
+
+    fn pins_release_all(&mut self, _cx: &mut Context<'_, impl EventOut>) -> RpcResult<()> {
+        if self.pins.release_all() {
+            info!("pins released");
+        }
+        Ready(())
+    }
+}
+
+fn refused(point: u16, e: &PinDiagError<'_>) {
+    cnt!(pin_requests_refused: u32);
+    warn!("pins: point {} refused: {}", point, e);
+}
+
 mod server_impl {
     // Re-parses the API trait and generates request dispatch + serdes for ServerState.
     // To see the generated code, add: debug_to_file = "./target/ww_server.rs"
@@ -117,8 +158,8 @@ mod server_impl {
         property_model = "_=get_set",
         introspect = "with_docs",
         // the board record and the chip ids are read at run time, the build id and the counter buffers are known at
-        // link time, the defmt encoding at run time (ww/device.rs)
-        const_model = "BOARD|IDS|INFO|BUILD_ID|DEFMT=fn",
+        // link time, the defmt encoding at run time (ww/device.rs); the free pins are a table in flash (src/pins.rs)
+        const_model = "BOARD|IDS|INFO|BUILD_ID|DEFMT|POINTS=fn",
         // left out: the optional build record, the board's reworks list, label notes (no room in the settings),
         // counters.watch (a host polls `read` over RTT)
         omit = [
@@ -191,6 +232,10 @@ async fn server_task(mut server: RttServer<'static, EmbassyClock>, mut state: Se
                     info!("{:?}", event);
                     if matches!(event, LinkEvent::Down(_)) {
                         state.log_frames.detach();
+                        // a host that disconnects or goes silent gives the pins back too
+                        if state.pins.release_all() {
+                            info!("pins released");
+                        }
                     }
                 }
             }

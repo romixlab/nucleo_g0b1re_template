@@ -25,3 +25,5 @@ ww_si.workspace = true # used by the generated client (ww_codegen!), not by name
 ww_report.workspace = true
 cnt_core.workspace = true
 defmt-decoder.workspace = true
+ww_pin_diag.workspace = true
+ww_gpio.workspace = true

@@ -5,6 +5,7 @@ mod boot;
 mod init;
 mod last_reset;
 mod log;
+mod pins;
 mod settings;
 mod ww;
 
@@ -58,8 +59,10 @@ async fn main(spawner: embassy_executor::Spawner) {
         Level::Low
     };
     let led = Output::new(p.PA5, led_level, Speed::Low);
+    // every free pin, for `pins` (src/pins.rs): take a pin out of its list there to use it here
+    let pins = pins::Pins::new(pins::take!(p));
 
-    let state = ww::ServerState::new(led, last_reset, settings).await;
+    let state = ww::ServerState::new(led, last_reset, settings, pins).await;
     ww::start(spawner, ww_up, ww_down, state);
 
     info!("init done");

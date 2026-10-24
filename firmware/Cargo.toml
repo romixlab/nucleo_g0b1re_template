@@ -32,6 +32,9 @@ ww_settings = { git = "https://github.com/vhrdtech/wire_weaver", features = ["de
 # flash reads that survive an ECC error left by a power cut
 ww_ecc_flash = { git = "https://github.com/vhrdtech/wire_weaver", features = ["stm32g0"] }
 ww_user_info = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
+# raw access to the free pins (src/pins.rs)
+ww_pin_diag = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["defmt"] }
+ww_gpio = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false, features = ["defmt"] } # its Level, Pull
 ww_error = { git = "https://github.com/vhrdtech/wire_weaver", default-features = false }
 # WireWeaver: API crate next to the firmware, served by src/ww.rs
 nucleo_g0b1re_api = { path = "../nucleo_g0b1re_api", features = ["defmt"] }
