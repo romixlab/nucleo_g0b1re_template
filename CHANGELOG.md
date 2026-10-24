@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-24
+
 ### Added
 
 - LD4 breathes by default (PWM on TIM2_CH1, embedded_bedrock's `bedrock_led`); `led_on` / `led_off` hold it solid on
