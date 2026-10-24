@@ -285,3 +285,56 @@ fn decode(bytes: &[u8], decoder: &mut dyn StreamDecoder) -> Vec<String> {
     }
     lines
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn frames(order: &mut InOrder) -> Vec<(u64, Vec<u8>)> {
+        order
+            .ready()
+            .into_iter()
+            .map(|(units, piece)| match piece {
+                Piece::Frames(bytes) => (units, bytes),
+                Piece::Lost(cause) => (units, cause.into_bytes()),
+            })
+            .collect()
+    }
+
+    #[test]
+    fn in_order_sorts_two_runs() {
+        let mut order = InOrder::default();
+        // the live run arrives before the backlog
+        order.push(3, 2, Piece::Frames(vec![3, 4]));
+        assert!(frames(&mut order).is_empty());
+        order.push(0, 3, Piece::Frames(vec![0, 1, 2]));
+        assert_eq!(
+            frames(&mut order),
+            vec![(3, vec![0, 1, 2]), (2, vec![3, 4])]
+        );
+    }
+
+    #[test]
+    fn in_order_skips_resends_and_counts_overlaps() {
+        let mut order = InOrder::default();
+        order.push(0, 2, Piece::Frames(vec![0, 1]));
+        assert_eq!(frames(&mut order), vec![(2, vec![0, 1])]);
+        // sent again whole
+        order.push(0, 2, Piece::Frames(vec![0, 1]));
+        assert!(frames(&mut order).is_empty());
+        // sent again from inside it, one unit new
+        order.push(1, 2, Piece::Frames(vec![1, 2]));
+        assert_eq!(frames(&mut order), vec![(1, vec![1, 2])]);
+    }
+
+    #[test]
+    fn in_order_passes_gaps_in_place() {
+        let mut order = InOrder::starting_at(10);
+        order.push(15, 1, Piece::Frames(vec![15]));
+        order.push(10, 5, Piece::Lost("Store".to_string()));
+        assert_eq!(
+            frames(&mut order),
+            vec![(5, b"Store".to_vec()), (1, vec![15])]
+        );
+    }
+}

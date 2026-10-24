@@ -366,10 +366,11 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
         Cmd::Log { follow, force } => {
             let board = connect(&cli).await?;
             if *follow {
-                // Ctrl-C ends the process; the board keeps the log for the next reader
-                board
-                    .follow_log(cli.elf.as_deref(), *force, |line| println!("{line}"))
-                    .await?;
+                // Ctrl-C ends the follow with a clean disconnect; the board keeps the log for the next reader
+                tokio::select! {
+                    result = board.follow_log(cli.elf.as_deref(), *force, |line| println!("{line}")) => result?,
+                    _ = tokio::signal::ctrl_c() => {}
+                }
                 board.disconnect().await;
             } else {
                 let report = board.log(cli.elf.as_deref(), *force).await?;
