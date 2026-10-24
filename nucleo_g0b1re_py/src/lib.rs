@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use nucleo_g0b1re_client::{
     BootTarget, CounterBuffer, Error, Nucleo, PROBE_RS_CHIP, Probe, SiliconRevision, api_line,
-    firmware_line,
+    firmware_line, node_lines, reset_lines,
 };
 use pyo3::exceptions::{PyConnectionError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -139,7 +139,10 @@ impl Device {
 
     /// Why the board last reset, with the crash record after a fault or panic, as text.
     fn last_reset(&self) -> PyResult<String> {
-        Ok(format!("{:#?}", self.block(self.nucleo()?.last_reset())?))
+        let board = self.nucleo()?;
+        let reset = self.block(board.last_reset())?;
+        let boots = self.block(board.boot_count())?;
+        Ok(reset_lines(&reset, boots).join("\n"))
     }
 
     /// Boots since the boot counter was cleared.
@@ -250,7 +253,7 @@ impl Device {
 
     /// The update node (product, profile, boot state, last result), as text.
     fn dfu_node(&self) -> PyResult<String> {
-        Ok(format!("{:#?}", self.block(self.nucleo()?.dfu_node())?))
+        Ok(node_lines(&self.block(self.nucleo()?.dfu_node())?).join("\n"))
     }
 
     /// Everything of the device contract in one text, for a bug report (counters and log decoded with the ELF).

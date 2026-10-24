@@ -104,9 +104,10 @@ deploy:
 py *args:
     cd nucleo_g0b1re_py && uv sync && uv run python -i -c "import nucleo_g0b1re; dev = nucleo_g0b1re.Device({{args}}); print(dev, dev.firmware())"
 
-# Run the Python example: blink the LED and print what runs on the board
-py-example *args:
-    cd nucleo_g0b1re_py && uv sync && uv run python examples/blink.py {{args}}
+# Run a Python example of nucleo_g0b1re_py/examples: `blink` (the default) blinks the LED and prints what runs on the
+# board, `device` reads the device contract (board, ids, chip, counters, log, settings, boot, update node)
+py-example name="blink" *args:
+    cd nucleo_g0b1re_py && uv sync && uv run python examples/{{name}}.py {{args}}
 
 # Build the Python module and run its tests (no board needed)
 test-py:
