@@ -5,6 +5,16 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `pins` in the API (0.2.0): the firmware serves `ww_pin_diag::PinDiag` on every pin the board map marks free (50
+  pins, named as in `docs/board/nucleo_g0b1re-pins.md`) and PC13 (B1) to read. A pin stays analog until a host sets
+  or reads it and goes back when the host releases the pins, disconnects or goes silent; the SWD pins, the virtual
+  COM port, the LED, the clock pins and reset are not in it. `just test` checks the list against the pin table.
+- `just pins`: every free pin live on the board's headers (`ww pins tui` over RTT with the board map as its preset):
+  drive, pull and read them. `docs/board/nucleo_g0b1re-pins-test.toml` is the pin test of a bare board (`ww pins test
+  --plan`). README: Pins, with a jumper test.
+
 ## [0.1.5] - 2026-10-24
 
 ### Added

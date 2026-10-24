@@ -151,6 +151,30 @@ cycle), which starts the firmware again; the probe reaches the chip whatever run
 the ROM bootloader too. Flashing four times within 10 s of each other counts as a boot loop as well: the fourth boot
 lands in the ROM bootloader, the next reset or flash comes back.
 
+## Pins
+
+The firmware serves `pins` ([`ww_pin_diag::PinDiag`](https://github.com/vhrdtech/wire_weaver/blob/master/docs/std_library/ww_pin_diag.md)):
+raw access to every pin [the pin table](docs/board/nucleo_g0b1re-pins.md) marks free, named as there, plus PC13
+(B1) to read. The SWD pins, the virtual COM port, the LED, the clock pins and reset are not in it. A pin stays in
+analog mode, as after reset, until a host sets or reads it, and goes back there when the host releases the pins,
+disconnects or goes silent; one program at a time has them (`#[claim(exclusive)]`). `firmware/src/pins.rs` has the
+list: take a pin out of it before using it for something else (`just test` checks the list against the pin table).
+
+```sh
+just pins                # every pin live on the board's headers: 1/0 drive, u/d/n pull, x release all, q quit
+ww --rtt STM32G0B1RETx pins list
+ww --rtt STM32G0B1RETx pins test --plan docs/board/nucleo_g0b1re-pins-test.toml   # shorts and pulls, pass/fail
+```
+
+`just pins` is `ww pins tui` with `docs/board/nucleo_g0b1re.toml` as its board preset: CN7, CN10 and the Arduino
+headers drawn as on the board, each pad with its level (`●` high, `○` low) and what was set on it. `ww pins test`
+drives and pulls each pin and reads it back: a pin shorted to GND, to 3V3 or to another pin, or one with an external
+pull, shows up; `docs/board/nucleo_g0b1re-pins-test.toml` holds what a bare board shows.
+
+**Jumper test:** put a jumper on CN7 pins 1-2 (PC10 and PC11). In `just pins`, drive PC10 high (`1`) and low (`0`):
+PC11 follows. `ww --rtt STM32G0B1RETx pins test PC10,PC11` reports them shorted to each other; take the jumper off
+and they are not. Press B1 and PC13 reads low.
+
 ## Python
 
 ```sh

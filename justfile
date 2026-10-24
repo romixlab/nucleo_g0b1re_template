@@ -63,6 +63,10 @@ run *args:
 cnt *args:
     cd firmware && cargo build && cnt run --probe {{probe}} {{args}}
 
+# Drive, pull and read every free pin live, laid out on the headers (ww pins tui over RTT); quitting releases them
+pins *args:
+    ww --rtt {{chip}} --probe {{probe}} pins tui --board docs/board/nucleo_g0b1re.toml {{args}}
+
 # Build the release firmware
 build-fw:
     cd firmware && cargo build --release --locked
