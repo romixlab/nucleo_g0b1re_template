@@ -1229,7 +1229,7 @@ dependencies = [
 
 [[package]]
 name = "nucleo_g0b1re_cli"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anstream",
  "anstyle",
@@ -1244,7 +1244,7 @@ dependencies = [
 
 [[package]]
 name = "nucleo_g0b1re_client"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "cnt_core",
@@ -1267,7 +1267,7 @@ dependencies = [
 
 [[package]]
 name = "nucleo_g0b1re_py"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "nucleo_g0b1re_client",
  "pyo3",

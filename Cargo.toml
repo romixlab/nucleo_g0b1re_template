@@ -6,7 +6,7 @@ members = ["nucleo_g0b1re_api", "nucleo_g0b1re_client", "nucleo_g0b1re_cli", "nu
 exclude = ["firmware"]
 
 [workspace.package]
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 license = "MIT"
 repository = "https://github.com/vhrdtech/nucleo_g0b1re_template"

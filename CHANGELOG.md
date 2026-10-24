@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-24
+
 ### Added
 
 - The device suite under `device` in the API (the `Device` sub-trait other WireWeaver devices serve): `firmware`,
