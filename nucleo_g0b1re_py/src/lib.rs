@@ -5,8 +5,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use nucleo_g0b1re_client::{
-    BootTarget, CounterBuffer, Error, Nucleo, PROBE_RS_CHIP, Probe, SiliconRevision, api_line,
-    firmware_line, node_lines, reset_lines,
+    BootTarget, Brightness, CounterBuffer, Error, Mode, Nucleo, PROBE_RS_CHIP, Probe,
+    SiliconRevision, api_line, clock_line, firmware_line, node_lines, reset_lines,
 };
 use pyo3::exceptions::{PyConnectionError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
@@ -113,6 +113,107 @@ impl Device {
             self.nucleo()?
                 .blink(count, Duration::from_millis(period_ms)),
         )
+    }
+
+    /// The global indication mode: "normal" shows LD4, "essential" and "off" hide it (RAM only, "normal" after a
+    /// reset).
+    #[getter]
+    fn leds_mode(&self) -> PyResult<String> {
+        let mode = match self.block(self.nucleo()?.leds_mode())? {
+            Mode::Normal => "normal",
+            Mode::OnlyEssential => "essential",
+            Mode::AllOff => "off",
+            Mode::Unknown(_) => "unknown",
+        };
+        Ok(mode.to_string())
+    }
+
+    #[setter]
+    fn set_leds_mode(&self, mode: &str) -> PyResult<()> {
+        let mode = match mode {
+            "normal" => Mode::Normal,
+            "essential" => Mode::OnlyEssential,
+            "off" => Mode::AllOff,
+            _ => {
+                return Err(PyValueError::new_err(
+                    "leds_mode is \"normal\", \"essential\" or \"off\"",
+                ));
+            }
+        };
+        self.block(self.nucleo()?.set_leds_mode(mode))
+    }
+
+    /// LD4's peak brightness: "lowest", "low", "normal", "high" or "highest" (RAM only, "normal" after a reset).
+    #[getter]
+    fn brightness(&self) -> PyResult<String> {
+        let level = match self.block(self.nucleo()?.brightness())? {
+            Brightness::Lowest => "lowest",
+            Brightness::Low => "low",
+            Brightness::Normal => "normal",
+            Brightness::High => "high",
+            Brightness::Highest => "highest",
+            Brightness::Unknown(_) => "unknown",
+        };
+        Ok(level.to_string())
+    }
+
+    #[setter]
+    fn set_brightness(&self, level: &str) -> PyResult<()> {
+        let level = match level {
+            "lowest" => Brightness::Lowest,
+            "low" => Brightness::Low,
+            "normal" => Brightness::Normal,
+            "high" => Brightness::High,
+            "highest" => Brightness::Highest,
+            _ => {
+                return Err(PyValueError::new_err(
+                    "brightness is \"lowest\", \"low\", \"normal\", \"high\" or \"highest\"",
+                ));
+            }
+        };
+        self.block(self.nucleo()?.set_brightness(level))
+    }
+
+    /// Blink LD4 at full brightness for `seconds` (up to 600), then show its mode again.
+    #[pyo3(signature = (seconds=5.0))]
+    fn identify(&self, seconds: f64) -> PyResult<()> {
+        let duration = Duration::try_from_secs_f64(seconds)
+            .map_err(|e| PyValueError::new_err(format!("identify for {seconds} s: {e}")))?;
+        self.block(self.nucleo()?.identify(duration))
+    }
+
+    /// Wait until the connection has steered the board's shared clock onto this PC's UTC (`Locked`), at most
+    /// `timeout` seconds; it takes a few seconds after connecting.
+    #[pyo3(signature = (timeout=30.0))]
+    fn wait_clock_locked(&self, timeout: f64) -> PyResult<()> {
+        let timeout = Duration::try_from_secs_f64(timeout)
+            .map_err(|e| PyValueError::new_err(format!("timeout {timeout} s: {e}")))?;
+        self.block(self.nucleo()?.wait_clock_locked(timeout))?;
+        Ok(())
+    }
+
+    /// One check of the board's shared time against this PC's UTC: `{"state", "source", "residual_us", "rtt_us",
+    /// "slew_us", "error_us", "rate_ppm", "fit_rms_us", "line"}`. `residual_us` is the board's shared time minus
+    /// UTC at the middle of the round trip, known to within `rtt_us / 2`; `slew_us` the offset the board still
+    /// slews in; `rate_ppm` and `fit_rms_us` come from the connection's fit of the board's clock. A value the board
+    /// or the connection can't tell yet is `None`.
+    fn clock_check<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        let board = self.nucleo()?;
+        let check = self.block(board.clock_check())?;
+        let steering = board.clock_steering().map(|s| s.status());
+        let fit = steering.as_ref().and_then(|s| s.fit.as_ref());
+        let s = &check.status;
+        let d = PyDict::new(py);
+        d.set_item("state", format!("{:?}", s.state))?;
+        d.set_item("source", s.source.as_ref().map(|src| format!("{src:?}")))?;
+        d.set_item("residual_us", check.residual_us)?;
+        d.set_item("rtt_us", check.rtt_us)?;
+        d.set_item("slew_us", s.slew_us)?;
+        d.set_item("error_us", s.error.as_ref().map(|e| e.to_f64() * 1e6))?;
+        d.set_item("rate_ppm", fit.map(|f| (f.slope - 1.0) * 1e6))?;
+        d.set_item("fit_rms_us", fit.map(|f| f.residual_rms / 1e3))?;
+        d.set_item("line", clock_line(&check, steering.as_ref()))?;
+        Ok(d)
     }
 
     /// Name, version, git commit, build time and profile of the running firmware, as text.
