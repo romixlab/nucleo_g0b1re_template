@@ -14,6 +14,10 @@
 //! 0.4 adds `leds` (`ww_indication::Indication`: mode, brightness, identify; LD4 breathes by default) and `clock`
 //! (`ww_timebase::Clock` with the `host_sync` group: a host steers the board onto UTC, so two boards breathe in
 //! phase). `led_on` / `led_off` stay: LD4 solid on, off.
+//!
+//! 0.5 gives `SiliconRevision` the shape that grows: `Unknown` first, then ES0548's revisions A, Z, Y in the sheet's
+//! order, so a revision a later sheet adds goes at the end and is a compatible change (a breaking change once, to get
+//! there).
 #![no_std]
 
 use wire_weaver::prelude::*;
@@ -111,14 +115,21 @@ pub struct Variant {
     pub flash_kib: u16,
 }
 
-/// Silicon revision of an STM32G0B1 / G0C1 as ES0548 lists them, see [`Variant::rev_id`]. A host reads one it
-/// doesn't know as [`Other`](SiliconRevision::Other).
-#[derive_shrink_wrap(borrowed, owned(feature = "std"), derive(Copy, Clone, Debug, PartialEq, Eq), ww_repr = nib, future_version = Other)]
+/// Silicon revision of an STM32G0B1 / G0C1 as ES0548 lists them, see [`Variant::rev_id`] for the raw code. The
+/// revisions keep the sheet's order and a new one is only ever added at the end, so a firmware that knows it is a
+/// compatible API change: an older host reads it as [`Newer`](SiliconRevision::Newer), with the code in `rev_id`.
+#[derive_shrink_wrap(borrowed, owned(feature = "std"), derive(Copy, Clone, Debug, PartialEq, Eq), ww_repr = unib32, future_version = Newer)]
 pub enum SiliconRevision {
+    /// A REV_ID this firmware doesn't know (a revision newer than it), the code is in `rev_id`
+    Unknown,
     /// Revision A, REV_ID 0x1000
     A,
-    /// A REV_ID this firmware doesn't know (a revision newer than it)
-    Unknown,
+    /// Revision Z, REV_ID 0x1001, marked Z or 3
+    #[since = "0.5.0"]
+    Z,
+    /// Revision Y, REV_ID 0x1003, marked Y or 4
+    #[since = "0.5.0"]
+    Y,
 }
 
 impl SiliconRevision {
@@ -126,6 +137,8 @@ impl SiliconRevision {
     pub const fn from_rev_id(rev_id: u16) -> Self {
         match rev_id {
             0x1000 => SiliconRevision::A,
+            0x1001 => SiliconRevision::Z,
+            0x1003 => SiliconRevision::Y,
             _ => SiliconRevision::Unknown,
         }
     }

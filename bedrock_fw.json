@@ -72,20 +72,7 @@
       "notes": "setup.py kept as G0's (the generator's docstring has a 150-column line: generator follow-up). API 0.4.0 snapshot added (released in 0.1.7 without it). Checked on the Nucleo: info, clock lock, leds."
     }
   ],
-  "rejected": [
-    {
-      "id": "silicon-revisions-zy",
-      "title": "SiliconRevision Z and Y in the API's variant enum (and the CLI / Python arms)",
-      "commit": "da9b3510354977b7563ef819d4d13880a9a120bb",
-      "files": [
-        "nucleo_g0b1re_api/src/lib.rs",
-        "nucleo_g0b1re_cli/src/main.rs",
-        "nucleo_g0b1re_py/src/lib.rs"
-      ],
-      "reason": "breaking for the API (the evolution check: variant unknown to 0.4.0, Unknown renumbered) so it needs API 0.5.0, and this board's chip is rev A; take it with the next breaking API change",
-      "date": "2026-10-25"
-    }
-  ],
+  "rejected": [],
   "nuances": [
     "API version history is G0's own: 0.1 .. 0.4 doc text and #[since] in nucleo_g0b1re_api/src/lib.rs, api_snapshots/ from 0_1_0; the generator starts at 0.1.0 with one snapshot. Never take its API version, doc or snapshot.",
     "Workspace version, CHANGELOG.md and FEATURES.md are G0's (the generator's are skeletons).",

@@ -5,6 +5,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- API 0.5.0, breaking: `SiliconRevision` knows ES0548's revisions Z and Y besides A, in a shape that grows by adding
+  at the end (`Unknown` first, then A, Z, Y; a host older than the firmware reads a newer revision as `Newer`, with
+  the code in `rev_id`). A revision a later errata sheet adds is then a compatible change. `g0b1re variant` and
+  Python's `variant()` name Z and Y. Hosts built for API 0.4 need rebuilding for this firmware. (API-60)
+
 ## [0.1.8] - 2026-10-25
 
 ### Changed

@@ -272,7 +272,8 @@ impl Device {
         Ok(ids.iter().map(|id| hex(id.value.as_slice())).collect())
     }
 
-    /// The chip on the board: `{"dev_id", "rev_id", "revision", "flash_kib"}`, `revision` is "A" or "unknown".
+    /// The chip on the board: `{"dev_id", "rev_id", "revision", "flash_kib"}`, `revision` is "A", "Z", "Y" or
+    /// "unknown".
     fn variant<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
         let v = self.block(self.nucleo()?.variant())?;
         let d = PyDict::new(py);
@@ -282,6 +283,8 @@ impl Device {
             "revision",
             match v.revision {
                 SiliconRevision::A => "A",
+                SiliconRevision::Z => "Z",
+                SiliconRevision::Y => "Y",
                 _ => "unknown",
             },
         )?;

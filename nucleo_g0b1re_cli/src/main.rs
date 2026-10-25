@@ -562,6 +562,8 @@ fn variant_line(v: &nucleo_g0b1re_client::Variant) -> String {
     };
     let revision = match v.revision {
         nucleo_g0b1re_client::SiliconRevision::A => "rev A".to_string(),
+        nucleo_g0b1re_client::SiliconRevision::Z => "rev Z".to_string(),
+        nucleo_g0b1re_client::SiliconRevision::Y => "rev Y".to_string(),
         _ => "unknown revision".to_string(),
     };
     format!(
