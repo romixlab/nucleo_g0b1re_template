@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- API evolution check requires the current version's snapshot (TPL-6, embedded_bedrock TPL-51, wire_weaver
+  EVO-12): `tests/evolution.rs` calls `require_current(true)` instead of `strict(true)`; `api_snapshots/` already
+  has 0.1.0 through 0.5.0, so the check keeps passing. `just api-save` now saves (or refreshes) the
+  current version's snapshot by running the same test with `WW_API_SAVE=1` instead of shelling out to `ww api
+  save`, so saving needs no `ww` install; `.githooks/pre-commit`'s message and README "Changing the API" updated to
+  match.
+
 ## [0.1.9] - 2026-10-28
 
 ### Changed

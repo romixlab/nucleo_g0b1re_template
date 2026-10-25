@@ -45,7 +45,8 @@ just py / just py-example / just test-py
 - Adding to the API: trait first (`nucleo_g0b1re_api`), then the firmware (`firmware/src/ww.rs`), then a typed
   method in the client, then the CLI and Python. Bump the API crate's version: `just api-check` (also in `just test`,
   CI and `.githooks/pre-commit`) compares it with `nucleo_g0b1re_api/api_snapshots/` and names the bump a change needs;
-  `just api-save` records a released version. Never edit or re-save a committed snapshot to make the check pass.
+  `just api-save` saves (or refreshes) the current version's snapshot. Never edit or re-save a committed snapshot
+  of a released version to make the check pass; bump the version instead.
 - Conventional Commits with a scope: `feat(fw): ...`, `feat(client): ...`, `feat(cli): ...`, `feat(py): ...`,
   `docs: ...`, `build: ...`; one CHANGELOG entry per change a user notices.
 - Public wording: the README, docs and recipe comments say what happens in neutral words.

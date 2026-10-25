@@ -7,7 +7,8 @@ Renames the crates and their directories (`nucleo_g0b1re_api` -> `my_board_api`,
 (`NucleoG0b1reApi` -> `MyBoardApi`), the generated GID constant, the Python module, the command line binary (`g0b1re`
 -> SHORT, the new name itself when SHORT is left out) and its environment variables (`G0B1RE_PROBE` -> `MY_BOARD_PROBE`).
 The API snapshots in `nucleo_g0b1re_api/api_snapshots/` describe the template's API crate, not the renamed one: they
-are removed, and the renamed crate's first snapshot is saved with `ww api save` (or left to `just api-save`).
+are removed, and the renamed crate's first snapshot is saved with `ww api save` (or left to `just api-save`, which
+the renamed crate's test now requires before it passes).
 Prose that names the board ("Nucleo-G0B1RE", the chip, the LED pin) stays: it is listed at the end for a look.
 Run it once, in a clean checkout, before changing anything else.
 """
