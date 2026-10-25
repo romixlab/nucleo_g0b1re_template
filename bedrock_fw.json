@@ -55,7 +55,40 @@
     "probe": "0483:374b",
     "pins": "board"
   },
-  "upgrades": [],
-  "rejected": [],
-  "nuances": []
+  "upgrades": [
+    {
+      "date": "2026-10-25",
+      "from": "6c78b2e9ca2e8f11bdd799081ee0c24bf0431a98",
+      "to": "da9b3510354977b7563ef819d4d13880a9a120bb",
+      "applied": [
+        "answers host, board nucleo_g0b1re, cli_name, probe, pins, led_mode, clock_sync (firmware, docs/board, docs/logo, CI, hooks regenerate byte for byte)",
+        "firmware/README.md: just setup paragraph, BKPSRAM row 0x10 with the boot word",
+        "AGENTS.md: layout text with the root workspace (TPL-43)",
+        "nucleo_g0b1re_py: test = false under [lib]",
+        "client tests/board_pins.rs: expect naming just board",
+        "scripts/rename.py: OLD_API",
+        "wording of the preset: Nucleo-G0B1RE, the Nucleo-64's own ST-LINK, STM32G0B1 / G0C1, with the reflow"
+      ],
+      "notes": "setup.py kept as G0's (the generator's docstring has a 150-column line: generator follow-up). API 0.4.0 snapshot added (released in 0.1.7 without it). Checked on the Nucleo: info, clock lock, leds."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "silicon-revisions-zy",
+      "title": "SiliconRevision Z and Y in the API's variant enum (and the CLI / Python arms)",
+      "commit": "da9b3510354977b7563ef819d4d13880a9a120bb",
+      "files": [
+        "nucleo_g0b1re_api/src/lib.rs",
+        "nucleo_g0b1re_cli/src/main.rs",
+        "nucleo_g0b1re_py/src/lib.rs"
+      ],
+      "reason": "breaking for the API (the evolution check: variant unknown to 0.4.0, Unknown renumbered) so it needs API 0.5.0, and this board's chip is rev A; take it with the next breaking API change",
+      "date": "2026-10-25"
+    }
+  ],
+  "nuances": [
+    "API version history is G0's own: 0.1 .. 0.4 doc text and #[since] in nucleo_g0b1re_api/src/lib.rs, api_snapshots/ from 0_1_0; the generator starts at 0.1.0 with one snapshot. Never take its API version, doc or snapshot.",
+    "Workspace version, CHANGELOG.md and FEATURES.md are G0's (the generator's are skeletons).",
+    "scripts/setup.py keeps G0's docstring and comments."
+  ]
 }

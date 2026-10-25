@@ -8,7 +8,7 @@ Renames the crates and their directories (`nucleo_g0b1re_api` -> `my_board_api`,
 -> SHORT, the new name itself when SHORT is left out) and its environment variables (`G0B1RE_PROBE` -> `MY_BOARD_PROBE`).
 The API snapshots in `nucleo_g0b1re_api/api_snapshots/` describe the template's API crate, not the renamed one: they
 are removed, and the renamed crate's first snapshot is saved with `ww api save` (or left to `just api-save`).
-Prose that names the board ("Nucleo G0B1RE", the chip, the LED pin) stays: it is listed at the end for a look.
+Prose that names the board ("Nucleo-G0B1RE", the chip, the LED pin) stays: it is listed at the end for a look.
 Run it once, in a clean checkout, before changing anything else.
 """
 
@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 OLD = "nucleo_g0b1re"
+OLD_API = "nucleo_g0b1re_api"
 OLD_SHORT = "g0b1re"
 SKIP_DIRS = {".git", "target", ".venv", "__pycache__"}
 TEXT_SUFFIXES = {".rs", ".toml", ".lock", ".md", ".py", ".json", ".yml", ".yaml", ".x", ""}
@@ -37,8 +38,8 @@ def upper_snake(snake: str) -> str:
 def replacements(new: str, short: str) -> list[tuple[str, str]]:
     # longest and most specific first, so a shorter pattern never eats a longer one
     return [
-        (upper_snake(f"{OLD}_api"), upper_snake(f"{new}_api")),
-        (pascal(f"{OLD}_api"), pascal(f"{new}_api")),
+        (upper_snake(OLD_API), upper_snake(OLD_API.replace(OLD, new))),
+        (pascal(OLD_API), pascal(OLD_API.replace(OLD, new))),
         (OLD, new),
         (OLD_SHORT.upper() + "_", short.upper() + "_"),
         (OLD_SHORT, short),
@@ -57,7 +58,7 @@ def main() -> int:
             return 2
     root = Path(__file__).resolve().parent.parent
     pairs = replacements(new, short)
-    for snapshot in sorted((root / f"{OLD}_api" / "api_snapshots").glob(f"{OLD}_api_*.ron")):
+    for snapshot in sorted((root / OLD_API / "api_snapshots").glob(f"{OLD_API}_*.ron")):
         snapshot.unlink()
     changed_files = 0
     for path in sorted(root.rglob("*")):
@@ -81,7 +82,7 @@ def main() -> int:
             continue
         path.rename(path.with_name(path.name.replace(OLD, new)))
         renamed += 1
-    api_crate = f"{new}_api"
+    api_crate = OLD_API.replace(OLD, new)
     if shutil.which("ww"):
         subprocess.run(["ww", "api", "save", api_crate], cwd=root, check=False)
     else:

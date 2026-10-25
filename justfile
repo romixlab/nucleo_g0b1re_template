@@ -1,4 +1,4 @@
-# Nucleo G0B1RE template: the firmware (firmware/, its .cargo/config.toml sets the target), the host workspace at
+# Nucleo-G0B1RE template: the firmware (firmware/, its .cargo/config.toml sets the target), the host workspace at
 # the root (API crate, client library, `g0b1re` command line, Python module).
 
 # Windows runs the recipes with cmd (`cd x && y` works there too): not every PC has Git's sh on PATH

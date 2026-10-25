@@ -1,7 +1,7 @@
-"""Read everything the board's device contract serves: board, ids, chip, counters, log, settings, boot state and
-the update node. From the repo root: `just py-example device [PROBE_SERIAL]`, or
-`uv run --project nucleo_g0b1re_py python nucleo_g0b1re_py/examples/device.py [PROBE_SERIAL]`. Counters and the
-log are decoded with the firmware's ELF: `just flash` or `just run` puts it where it is found by its build id."""
+"""Read everything the board's device contract serves: board, ids, chip, counters, log, settings, boot state and the
+update node. From the repo root: `just py-example device [PROBE_SERIAL]`, or `uv run --project nucleo_g0b1re_py
+python nucleo_g0b1re_py/examples/device.py [PROBE_SERIAL]`. Counters and the log are decoded with the firmware's
+ELF: `just flash` or `just run` puts it where it is found by its build id."""
 
 import sys
 

@@ -4,11 +4,19 @@ Firmware for **STM32G0B1RE** (thumbv6m-none-eabi), framework: `embassy`, logging
 
 ## Toolchain
 
+With [just](https://just.systems/man/en/packages.html) and [uv](https://docs.astral.sh/uv/getting-started/installation/) installed:
+
 ```
-rustup target add thumbv6m-none-eabi
-cargo install probe-rs-tools --locked flip-link
-cargo install cnt_cli   # provides `cnt`: cnt tui (TUI), cnt read, cnt reset
+just setup           # rustup with thumbv6m-none-eabi, probe-rs, flip-link, cnt, ww and boardmap
+just setup --check   # only report what is missing
 ```
+
+`scripts/setup.py` runs on Arch, Ubuntu / Debian and Windows (winget) and skips what is already there. It prints its
+plan first, naming each script it fetches from the internet and runs, the way these tools are meant to be installed:
+probe-rs's udev rules file (pinned to a commit) and rustup's installer; probe-rs's installer, on Windows through
+`irm | iex` with `-ExecutionPolicy Bypass`. Steps that need root or an administrator (system packages, the probe's
+udev rule, the ST-LINK driver on Windows) are printed for you; `just setup --root` runs them too, each shown first.
+`cnt tui` shows the event counters (also `cnt read`, `cnt reset`).
 
 ## Run
 
@@ -27,7 +35,7 @@ See `memory.x`. Summary:
 | FLASH | 0x08000000 | 504K | Application |
 | SETTINGS | 0x0807E000 | 8K | ww_settings store, 4 erase pages (the end of BANK_2: erases don't stall code running from bank 1) |
 | SRAM (ref) | 0x20000000 | 144K | Main RAM (also exported as RAM) |
-| BKPSRAM | 0x4000B100 | 0x14 | TAMP backup registers, retained across resets (not power loss without VBAT); cnt.x places the BKP counters here |
+| BKPSRAM | 0x4000B100 | 0x10 | TAMP_BKP0R..3R, retained across resets (not power loss without VBAT); cnt.x places the BKP counters here. TAMP_BKP4R (0x4000B110) is the boot word of bedrock_rom_boot (src/boot.rs), not cnt's |
 
 ## MCU
 

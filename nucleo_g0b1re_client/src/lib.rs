@@ -1,4 +1,4 @@
-//! Host library for the Nucleo G0B1RE firmware: typed access to its WireWeaver API (`nucleo_g0b1re_api`) through
+//! Host library for the Nucleo-G0B1RE firmware: typed access to its WireWeaver API (`nucleo_g0b1re_api`) through
 //! the debug probe (RTT). The command line (`nucleo_g0b1re_cli`) and the Python module (`nucleo_g0b1re_py`) are
 //! thin layers over this crate: everything that talks to the board lives here.
 //!
@@ -81,8 +81,8 @@ pub enum Error {
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
-/// USB vendor and product id of the Nucleo-64's on-board ST-LINK/V2-1: the only probes [Probe::default] looks at, so
-/// a probe of another board on the same PC is never used.
+/// USB vendor and product id of the Nucleo-64's own ST-LINK/V2-1: the only probes [Probe::default] looks at, so a
+/// probe of another board on the same PC is never used.
 pub const NUCLEO_PROBE: (u16, u16) = (0x0483, 0x374b);
 
 /// How to reach the board: which probe and chip, and how to find the RTT control block.

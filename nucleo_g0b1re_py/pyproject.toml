@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "nucleo_g0b1re"
-description = "Talk to the Nucleo G0B1RE firmware from Python, through its debug probe"
+description = "Talk to the Nucleo-G0B1RE firmware from Python, through its debug probe"
 requires-python = ">=3.9"
 license = "MIT"
 classifiers = [

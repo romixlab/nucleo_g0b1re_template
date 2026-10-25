@@ -1,5 +1,5 @@
-//! `g0b1re`: the command line over `nucleo_g0b1re_client`. Argument parsing and printing live here, everything
-//! that talks to the board is the library's.
+//! `g0b1re`: the command line over `nucleo_g0b1re_client`. Argument parsing and printing live here, everything that
+//! talks to the board is the library's.
 //!
 //! Shell completion, with the serials of the probes attached right now: `source <(COMPLETE=bash g0b1re)` in
 //! `~/.bashrc`, `COMPLETE=zsh g0b1re`, `COMPLETE=fish g0b1re | source`.
@@ -37,8 +37,8 @@ const GREEN: Style = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Green)));
 const YELLOW: Style = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Yellow)));
 const RED: Style = Style::new().fg_color(Some(Color::Ansi(AnsiColor::Red)));
 
-/// Nucleo G0B1RE over its debug probe: the LED, the firmware, the board, its label, counters and log, settings,
-/// the last reset, reboots into the ROM bootloader.
+/// Nucleo-G0B1RE over its debug probe: the LED, the firmware, the board, its label, counters and log, settings, the
+/// last reset, reboots into the ROM bootloader.
 #[derive(Parser)]
 #[command(
     name = "g0b1re",
@@ -53,9 +53,9 @@ struct Cli {
     /// probe-rs chip name of the MCU on the board
     #[arg(long, env = "G0B1RE_CHIP", global = true, default_value = PROBE_RS_CHIP)]
     chip: String,
-    /// The firmware's ELF, for a fast attach (the RTT control block address is read from it instead of scanning
-    /// the RAM, about 1.5 s through an ST-LINK) and to decode counters and the log (default for those: the ELF of
-    /// the board's build id, from target/ or what `ww elf add` keeps)
+    /// The firmware's ELF, for a fast attach (the RTT control block address is read from it instead of scanning the
+    /// RAM, about 1.5 s through an ST-LINK) and to decode counters and the log (default for those: the ELF of the
+    /// board's build id, from target/ or what `ww elf add` keeps)
     #[arg(long, env = "G0B1RE_ELF", global = true, value_name = "FILE", add = ArgValueCompleter::new(elf_files))]
     elf: Option<PathBuf>,
     /// SWD clock in Hz (default: the probe's)
@@ -554,10 +554,10 @@ async fn run(cli: Cli) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// `STM32G0B1/G0C1 (0x467) rev A (0x1000), 512 KiB flash`.
+/// `STM32G0B1 / G0C1 (0x467) rev A (0x1000), 512 KiB flash`.
 fn variant_line(v: &nucleo_g0b1re_client::Variant) -> String {
     let device = match v.dev_id {
-        0x467 => "STM32G0B1/G0C1",
+        0x467 => "STM32G0B1 / G0C1",
         _ => "unknown device",
     };
     let revision = match v.revision {

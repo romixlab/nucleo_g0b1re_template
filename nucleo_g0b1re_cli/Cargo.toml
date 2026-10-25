@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "g0b1re: command line for the Nucleo G0B1RE firmware, a thin layer over nucleo_g0b1re_client"
+description = "g0b1re: command line for the Nucleo-G0B1RE firmware, a thin layer over nucleo_g0b1re_client"
 
 [[bin]]
 name = "g0b1re"

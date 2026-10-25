@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Upgraded from embedded_bedrock's firmware template da9b351: `bedrock_fw.json` records the suite's answers (host,
+  board preset, probe, pins, LED mode, clock sync), with which the generator writes the firmware, the board map,
+  the logo, CI and hooks as they are here. The firmware README says `just setup` and the right backup-register size,
+  AGENTS.md describes the root workspace, the board is named "Nucleo-G0B1RE" throughout, the Python crate's lib has no
+  Rust test binary.
+- `api_snapshots/` has the released API 0.4.0.
+
 ## [0.1.7] - 2026-10-24
 
 ### Added

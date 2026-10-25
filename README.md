@@ -30,8 +30,8 @@ What the firmware has from the start: a WireWeaver API over RTT with the device 
 name, version, commit, build id; board, unique id and chip; last reset cause with the crash record of a HardFault or
 panic; a label and settings stored in flash; the `cnt` event counters in RAM and in backup registers; the defmt log,
 kept in RAM across a reset; reboots into the STM32 ROM bootloader and a boot-loop rescue), a settings store in the
-last 8 KiB of flash with ECC-safe reads, flip-link stack overflow protection, the ES0548 dual-bank prefetch guard. [FEATURES.md](FEATURES.md) lists all of it
-with its status; [CHANGELOG.md](CHANGELOG.md) the changes.
+last 8 KiB of flash with ECC-safe reads, flip-link stack overflow protection, the ES0548 dual-bank prefetch guard.
+[FEATURES.md](FEATURES.md) lists all of it with its status; [CHANGELOG.md](CHANGELOG.md) the changes.
 
 ## The board
 
@@ -100,7 +100,7 @@ g0b1re label "bench 1"   # stored in the board's flash
 g0b1re last-reset --clear
 ```
 
-The recipes and `cargo run` use only the Nucleo's own ST-LINK/V2-1 (USB id `0483:374b`), never another probe on the
+The recipes and `cargo run` use only the Nucleo-64's own ST-LINK/V2-1 (USB id `0483:374b`), never another probe on the
 PC; with two Nucleos attached, `G0B1RE_PROBE=SERIAL` (from `probe-rs list`, in the environment or in a `.env` file)
 picks one. A probe can be opened by one program at a time: stop `just run` / `just attach` before using `g0b1re`. Connecting
 scans the RAM for the RTT control block (about 1.5 s through an ST-LINK); `--elf firmware/target/thumbv6m-none-eabi/debug/nucleo_g0b1re`

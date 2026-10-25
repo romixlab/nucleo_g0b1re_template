@@ -13,7 +13,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use tokio::runtime::Runtime;
 
-/// Talk to the Nucleo G0B1RE firmware through its debug probe.
+/// Talk to the Nucleo-G0B1RE firmware through its debug probe.
 #[pymodule]
 fn nucleo_g0b1re(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Device>()?;
@@ -39,8 +39,8 @@ fn to_py(e: Error) -> PyErr {
 ///
 /// `Device(probe_serial=None, chip="STM32G0B1RETx", elf=None, speed_hz=None)`: `probe_serial` picks a Nucleo
 /// ST-LINK when several are attached (a serial or a part of it, or VID:PID:SERIAL; no other probe is ever used
-/// without it), `elf` (the firmware's ELF) makes attaching fast and decodes counters and the log (default for those:
-/// the ELF of the board's build id).
+/// without it), `elf` (the firmware's ELF) makes attaching fast and decodes counters and the log (default for
+/// those: the ELF of the board's build id).
 #[pyclass]
 struct Device {
     runtime: Runtime,

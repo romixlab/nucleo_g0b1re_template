@@ -62,16 +62,19 @@ This firmware (STM32G0B1RE, `embassy`) was generated from the **embedded_bedrock
 
 ## Layout: WireWeaver API crate + firmware
 
-The firmware serves a [WireWeaver](https://github.com/vhrdtech/wire_weaver) API over RTT. This directory holds two
-standalone crates (not a Cargo workspace, they build for different targets):
+The firmware serves a [WireWeaver](https://github.com/vhrdtech/wire_weaver) API over RTT. The root `Cargo.toml` is a
+Cargo workspace of the host side (with its `Cargo.lock`, which `#[ww_api_root]` needs to find the API's git
+dependencies); the firmware is a standalone crate next to it, excluded from the workspace because it builds for
+`thumbv6m-none-eabi` with its own `.cargo/config.toml` and `Cargo.lock`:
 
-- `nucleo_g0b1re_api/` — `#![no_std]` API crate: the `NucleoG0b1reApi` trait (`#[ww_api_root]`) and its data types
-  (`#[derive_shrink_wrap]`). Its name + version identify the API on the wire: bump the version with every change and
-  follow WireWeaver's `docs/evolution/rules.md` so deployed devices and hosts keep working together.
+- `nucleo_g0b1re_api/` — `#![no_std]` API crate, a workspace member and the firmware's path dependency: the
+  `NucleoG0b1reApi` trait (`#[ww_api_root]`) and its data types (`#[derive_shrink_wrap]`).
+  Its name + version identify the API on the wire: bump the version with every change and follow WireWeaver's
+  `docs/evolution/rules.md` so deployed devices and hosts keep working together.
 - `firmware/` — the firmware; `src/ww.rs` implements the API on `ServerState` (`ww_codegen!`) and runs the transport.
   All firmware commands (`cargo build`, `cargo run`) run there.
 
-WireWeaver crates come from git (`https://github.com/vhrdtech/wire_weaver`, pinned by `firmware/Cargo.lock`).
+WireWeaver crates come from git (`https://github.com/vhrdtech/wire_weaver`, pinned by `firmware/Cargo.lock` and the root's).
 Its `AGENTS.md` and `docs/` explain the API DSL (methods, properties, streams) and the wire format.
 
 The trait, `ServerState` and the method implementations were blinky stubs; after generation they are this
