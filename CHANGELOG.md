@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-25
+
 ### Changed
 
 - Upgraded from embedded_bedrock's firmware template da9b351: `bedrock_fw.json` records the suite's answers (host,
