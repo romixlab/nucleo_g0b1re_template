@@ -6,5 +6,7 @@
 fn api_evolution() {
     wire_weaver_evolution::Check::new(env!("CARGO_MANIFEST_DIR"))
         .strict(true)
+        // TODO: .require_current(true) once wire_weaver_evolution has it (wire_weaver EVO-12): the current version
+        // then needs its own snapshot, like Cargo.lock
         .assert();
 }

@@ -4,13 +4,13 @@
   "template": {
     "repo": "https://github.com/romixlab/embedded_bedrock",
     "path": "firmware_template_skill",
-    "commit": "6c78b2e9ca2e8f11bdd799081ee0c24bf0431a98",
-    "commit_date": "2026-10-22T22:43:12+02:00",
+    "commit": "da9b3510354977b7563ef819d4d13880a9a120bb",
+    "commit_date": "2026-10-25T09:50:54+01:00",
     "dirty": false,
     "version": "Unreleased"
   },
   "generated": "2026-10-23T11:11:22+02:00",
-  "command": "bedrock_gen.py new nucleo_g0b1re --chip STM32G0B1RE --settings --bkp-counters auto --counters --led PA5 --wire-weaver --ww-transport rtt --ww-api nucleo_g0b1re_api",
+  "command": "bedrock_gen.py new nucleo_g0b1re --ww-api nucleo_g0b1re_api --board nucleo_g0b1re",
   "answers": {
     "name": "nucleo_g0b1re",
     "chip": "STM32G0B1RE",
@@ -41,12 +41,19 @@
     "supply_config": null,
     "smps_voltage": null,
     "led": "PA5",
+    "led_mode": "auto",
+    "clock_sync": "auto",
     "bedrock": "git",
     "build_info": false,
     "wire_weaver": true,
     "ww_transport": "rtt",
     "ww_api": "nucleo_g0b1re_api",
-    "ww_src": "git"
+    "ww_src": "git",
+    "host": true,
+    "cli_name": "g0b1re",
+    "board": "nucleo_g0b1re",
+    "probe": "0483:374b",
+    "pins": "board"
   },
   "upgrades": [],
   "rejected": [],
