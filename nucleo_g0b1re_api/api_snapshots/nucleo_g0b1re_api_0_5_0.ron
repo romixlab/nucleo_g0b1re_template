@@ -1,6 +1,6 @@
 // nucleo_g0b1re_api 0.5.0 traits and types, saved by `ww api save`.
 // Do not edit, bump the crate version and save a new snapshot instead.
-// shrink_wrap sha256: 6f8538f6ce4e663ed63dbca0006fa3d8dc33642da12283a921eeb3a63d04c25f
+// shrink_wrap sha256: 43f8e39ad00a4512a83fc70345e0c3c7b2b48474a2314faf3a14389d260c863b
 (magic: 2837124336, ww_self_version: (major: 0, minor: 3, patch: 0), root: (docs: [
     "WireWeaver API of the nucleo_g0b1re firmware (`../nucleo_g0b1re_api`), served by `../firmware/src/ww.rs`.",
     "",
@@ -55,7 +55,7 @@
         (docs: [
             "Revision Y, REV_ID 0x1003, marked Y or 4",
         ], ident: "Y", fields: Unit, discriminant: 3, since: Some((major: 0, minor: 5, patch: 0))),
-    ], path: None, instance_of: None)), crate_idx: 0),
+    ], path: None, instance_of: None, future_version: Some(Variant(ident: "Newer")))), crate_idx: 0),
     InLine(ty: Struct((size: Unsized, crate_idx: 0, docs: [
         "The chip a board carries, see [`Device::variant`]: every Nucleo-G0B1RE has an STM32G0B1RET6, what can differ is",
         "its silicon revision (and a G0C1 fitted by hand).",
