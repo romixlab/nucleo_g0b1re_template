@@ -28,7 +28,7 @@ progress, 📋 planned, 🐛 bug. Update this file in the same commit as the cod
 | API-2 | Device contract: `FirmwareInfo` (name, version, commit, build time, build id), `LastReset`, `UserInfo` label | ✅ | WireWeaver stdlib traits |
 | API-3 | `device: Device` (the sub-trait of other WireWeaver devices): firmware, last_reset, board, uid, label, counters, log, variant, settings, boot, dfu.node; API 0.2.0 | ✅ | breaking: firmware, last_reset, label moved under `device` |
 | API-4 | `leds: ww_indication::Indication` (mode, brightness, identify) and `clock: ww_timebase::Clock`; `led_on` / `led_off` are solid on / off; API 0.4.0 | ✅ | additions, `#[since = "0.4.0"]` |
-| API-60 | `variant.revision` that grows: `SiliconRevision` is `Unknown`, then ES0548's A, Z, Y (REV_ID 0x1000, 0x1001, 0x1003) in the sheet's order, `ww_repr = unib32`, catch-all `Newer`; a revision a later sheet adds is appended, a compatible change; API 0.5.0 | ✅ | breaking once (the discriminants move); embedded_bedrock TPL-52 |
+| API-60 | `variant.revision` that grows: `SiliconRevision` is `Unknown`, then ES0548's A, Z, Y (REV_ID 0x1000, 0x1001, 0x1003) in the sheet's order, `ww_repr = unib32`, catch-all `Newer`; a revision a later sheet adds is appended, a compatible change; API 0.5.0 | ✅ | breaking once (the discriminants move); embedded_bedrock TPL-52. Snapshot `0_5_0` was saved by a `ww` before wire_weaver EVO-10 and doesn't record the catch-all: save it again once EVO-10 is on wire_weaver main (P2528#25oct-2141), until then `ww api check` calls an appended revision breaking |
 
 ## HOST: client library and command line
 
