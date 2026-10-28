@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-10-28
+
 ### Changed
 
 - API 0.5.0, breaking: `SiliconRevision` knows ES0548's revisions Z and Y besides A, in a shape that grows by adding
