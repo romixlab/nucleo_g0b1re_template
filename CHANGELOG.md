@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-10-28
+
 ### Changed
 
 - API evolution check requires the current version's snapshot (TPL-6, embedded_bedrock TPL-51, wire_weaver
