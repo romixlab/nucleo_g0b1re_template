@@ -5,6 +5,11 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `device.board.set_reworks` (`ww_board_info` 0.3.0, STD-98) added to `omit` next to `device.board.REWORKS` in
+  `firmware/src/ww.rs`: reworks aren't served; keeps building once STD-98 lands on wire_weaver main.
+
 ## [0.1.10] - 2026-10-28
 
 ### Changed
