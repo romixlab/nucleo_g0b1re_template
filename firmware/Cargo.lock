@@ -1067,7 +1067,7 @@ dependencies = [
 
 [[package]]
 name = "nucleo_g0b1re_api"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "defmt 1.2.0",
  "wire_weaver",
