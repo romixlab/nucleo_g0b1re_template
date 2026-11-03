@@ -9,6 +9,9 @@ All notable changes to this project are documented here. The format follows
 
 - `device.board.set_reworks` (`ww_board_info` 0.3.0, STD-98) added to `omit` next to `device.board.REWORKS` in
   `firmware/src/ww.rs`: reworks aren't served; keeps building once STD-98 lands on wire_weaver main.
+- `nucleo_g0b1re_api` bumped 0.5.0 → 0.6.0: wire_weaver STD-98 changed the wire signature of several `ww_stdlib`
+  traits the API uses, a breaking change the evolution check caught; new snapshot at
+  `nucleo_g0b1re_api/api_snapshots/nucleo_g0b1re_api_0_6_0.ron`.
 
 ## [0.1.10] - 2026-10-28
 
