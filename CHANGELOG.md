@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-11-07
+
 ### Changed
 
 - docs: internal references removed
